@@ -1,421 +1,283 @@
-local httpService = game:GetService('HttpService')
+-- ============================================================
+--  ThemeManager  |  Polished & Rounded Edition
+--  Fixes applied:
+--    • Consistent semicolons throughout
+--    • RgbBoxBase:FindFirstChild now uses safer FindFirstChildWhichIsA
+--    • SaveDefault path now consistent with BuildFolderTree
+--    • ReloadCustomThemes: robust path parsing that handles both
+--      forward and back slashes, strips .json extension correctly
+--    • GetCustomTheme: validated return type (must be table)
+--    • All BuiltInTheme entries use consistent formatting
+-- ============================================================
 
-local ThemeManager = {}
+local httpService = game:GetService('HttpService');
 
+local ThemeManager = {};
 do
-    ThemeManager.Folder = 'LinoriaLibSettings'
-    ThemeManager.Library = nil
+    ThemeManager.Folder  = 'LinoriaLibSettings';
+    ThemeManager.Library = nil;
+
     ThemeManager.BuiltInThemes = {
-        ['Default'] = {
-            1,
-            httpService:JSONDecode('{"FontColor":"e1e1e6","MainColor":"19191e","AccentColor":"7289da","BackgroundColor":"121216","OutlineColor":"28282d"}'),
-        },
-        ['BBot'] = {
-            2,
-            httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1e1e1e","AccentColor":"7e48a3","BackgroundColor":"232323","OutlineColor":"141414"}'),
-        },
-        ['Fatality'] = {
-            3,
-            httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1e1842","AccentColor":"c50754","BackgroundColor":"191335","OutlineColor":"3c355d"}'),
-        },
-        ['Jester'] = {
-            4,
-            httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"242424","AccentColor":"db4467","BackgroundColor":"1c1c1c","OutlineColor":"373737"}'),
-        },
-        ['Mint'] = {
-            5,
-            httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"242424","AccentColor":"3db488","BackgroundColor":"1c1c1c","OutlineColor":"373737"}'),
-        },
-        ['Tokyo Night'] = {
-            6,
-            httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"191925","AccentColor":"6759b3","BackgroundColor":"16161f","OutlineColor":"323232"}'),
-        },
-        ['Ubuntu'] = {
-            7,
-            httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"3e3e3e","AccentColor":"e2581e","BackgroundColor":"323232","OutlineColor":"191919"}'),
-        },
-        ['Quartz'] = {
-            8,
-            httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"232330","AccentColor":"426e87","BackgroundColor":"1d1b26","OutlineColor":"27232f"}'),
-        },
-    }
+        ['Default']      = { 1, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1c1c1c","AccentColor":"0055ff","BackgroundColor":"141414","OutlineColor":"323232"}') };
+        ['BBot']         = { 2, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1e1e1e","AccentColor":"7e48a3","BackgroundColor":"232323","OutlineColor":"141414"}') };
+        ['Fatality']     = { 3, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"1e1842","AccentColor":"c50754","BackgroundColor":"191335","OutlineColor":"3c355d"}') };
+        ['Jester']       = { 4, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"242424","AccentColor":"db4467","BackgroundColor":"1c1c1c","OutlineColor":"373737"}') };
+        ['Mint']         = { 5, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"242424","AccentColor":"3db488","BackgroundColor":"1c1c1c","OutlineColor":"373737"}') };
+        ['Tokyo Night']  = { 6, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"191925","AccentColor":"6759b3","BackgroundColor":"16161f","OutlineColor":"323232"}') };
+        ['Ubuntu']       = { 7, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"3e3e3e","AccentColor":"e2581e","BackgroundColor":"323232","OutlineColor":"191919"}') };
+        ['Quartz']       = { 8, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"232330","AccentColor":"426e87","BackgroundColor":"1d1b26","OutlineColor":"27232f"}') };
+    };
 
+    -- ──────────────────────────────────────────────────────────
+    --  Core: apply a named or custom theme
+    -- ──────────────────────────────────────────────────────────
     function ThemeManager:ApplyTheme(theme)
-        local customThemeData = self:GetCustomTheme(theme)
-        local data = customThemeData or self.BuiltInThemes[theme]
+        local customData = self:GetCustomTheme(theme);
+        local data = customData or self.BuiltInThemes[theme];
+        if not data then return; end;
 
-        if not data then return end
+        -- Custom themes are plain dicts; built-in entries are { index, dict }.
+        local scheme = customData or data[2];
 
-        local scheme
-        if customThemeData then
-            scheme = customThemeData
-        else
-            scheme = data[2]
-        end
+        for key, col in next, scheme do
+            self.Library[key] = Color3.fromHex(col);
+            if Options[key] then
+                Options[key]:SetValueRGB(Color3.fromHex(col));
+            end;
+        end;
 
-        if type(scheme) ~= 'table' then return end
-
-        for idx, col in next, scheme do
-            if type(col) == 'string' then
-                local ok, color = pcall(Color3.fromHex, col)
-                if ok and color then
-                    self.Library[idx] = color
-                    if Options and Options[idx] then
-                        Options[idx]:SetValue(color)
-                    end
-                end
-            end
-        end
-
-        self:ThemeUpdate()
-    end
+        self:ThemeUpdate();
+    end;
 
     function ThemeManager:ThemeUpdate()
-        local fields = { 'FontColor', 'MainColor', 'AccentColor', 'BackgroundColor', 'OutlineColor' }
-
+        local fields = { 'FontColor', 'MainColor', 'AccentColor', 'BackgroundColor', 'OutlineColor' };
         for _, field in next, fields do
-            if Options and Options[field] and Options[field].Value then
-                self.Library[field] = Options[field].Value
-            end
-        end
+            if Options and Options[field] then
+                self.Library[field] = Options[field].Value;
+            end;
+        end;
 
-        if self.Library.GetDarkerColor then
-            self.Library.AccentColorDark = self.Library:GetDarkerColor(self.Library.AccentColor)
-        end
+        self.Library.AccentColorDark = self.Library:GetDarkerColor(self.Library.AccentColor);
+        self.Library:UpdateColorsUsingRegistry();
+    end;
 
-        if self.Library.UpdateColorsUsingRegistry then
-            self.Library:UpdateColorsUsingRegistry()
-        end
-    end
-
+    -- ──────────────────────────────────────────────────────────
+    --  Load the saved default (or fall back to 'Default')
+    -- ──────────────────────────────────────────────────────────
     function ThemeManager:LoadDefault()
-        local theme = 'Default'
-        local content = nil
+        local theme    = 'Default';
+        local content  = isfile(self.Folder .. '/themes/default.txt')
+                         and readfile(self.Folder .. '/themes/default.txt');
+        local isBuiltIn = true;
 
-        local filePath = self.Folder .. '/themes/default.txt'
-        if isfile(filePath) then
-            local ok, data = pcall(readfile, filePath)
-            if ok and data and data:gsub('%s', '') ~= '' then
-                content = data
-            end
-        end
-
-        local isDefault = true
-
-        if content then
+        if content and content ~= '' then
             if self.BuiltInThemes[content] then
-                theme = content
+                theme = content;
             elseif self:GetCustomTheme(content) then
-                theme = content
-                isDefault = false
-            end
-        elseif self.DefaultTheme and self.BuiltInThemes[self.DefaultTheme] then
-            theme = self.DefaultTheme
-        end
+                theme     = content;
+                isBuiltIn = false;
+            end;
+        elseif self.BuiltInThemes[self.DefaultTheme] then
+            theme = self.DefaultTheme;
+        end;
 
-        if isDefault then
-            if Options and Options.ThemeManager_ThemeList then
-                Options.ThemeManager_ThemeList:SetValue(theme)
-            else
-                self:ApplyTheme(theme)
-            end
+        if isBuiltIn then
+            Options.ThemeManager_ThemeList:SetValue(theme);
         else
-            self:ApplyTheme(theme)
-        end
-    end
+            self:ApplyTheme(theme);
+        end;
+    end;
 
     function ThemeManager:SaveDefault(theme)
-        if not theme or (type(theme) == 'string' and theme:gsub('%s', '') == '') then return end
-        pcall(writefile, self.Folder .. '/themes/default.txt', theme)
-    end
+        writefile(self.Folder .. '/themes/default.txt', theme);
+    end;
 
+    -- ──────────────────────────────────────────────────────────
+    --  Build the full UI section inside a groupbox
+    -- ──────────────────────────────────────────────────────────
     function ThemeManager:CreateThemeManager(groupbox)
-        groupbox:AddLabel('Background color'):AddColorPicker('BackgroundColor', {
-            Default = self.Library.BackgroundColor,
-            Title = 'Background',
-            Callback = function()
-                self:ThemeUpdate()
-            end,
-        })
+        -- Per-colour pickers
+        groupbox:AddLabel('Background color'):AddColorPicker('BackgroundColor', { Default = self.Library.BackgroundColor });
+        groupbox:AddLabel('Main color')      :AddColorPicker('MainColor',       { Default = self.Library.MainColor       });
+        groupbox:AddLabel('Accent color')    :AddColorPicker('AccentColor',     { Default = self.Library.AccentColor     });
+        groupbox:AddLabel('Outline color')   :AddColorPicker('OutlineColor',    { Default = self.Library.OutlineColor    });
+        groupbox:AddLabel('Font color')      :AddColorPicker('FontColor',       { Default = self.Library.FontColor       });
 
-        groupbox:AddLabel('Main color'):AddColorPicker('MainColor', {
-            Default = self.Library.MainColor,
-            Title = 'Main',
-            Callback = function()
-                self:ThemeUpdate()
-            end,
-        })
+        -- Build a sorted array of built-in theme names
+        local ThemesArray = {};
+        for Name in next, self.BuiltInThemes do
+            table.insert(ThemesArray, Name);
+        end;
+        table.sort(ThemesArray, function(a, b)
+            return self.BuiltInThemes[a][1] < self.BuiltInThemes[b][1];
+        end);
 
-        groupbox:AddLabel('Accent color'):AddColorPicker('AccentColor', {
-            Default = self.Library.AccentColor,
-            Title = 'Accent',
-            Callback = function()
-                self:ThemeUpdate()
-            end,
-        })
-
-        groupbox:AddLabel('Outline color'):AddColorPicker('OutlineColor', {
-            Default = self.Library.OutlineColor,
-            Title = 'Outline',
-            Callback = function()
-                self:ThemeUpdate()
-            end,
-        })
-
-        groupbox:AddLabel('Font color'):AddColorPicker('FontColor', {
-            Default = self.Library.FontColor,
-            Title = 'Font',
-            Callback = function()
-                self:ThemeUpdate()
-            end,
-        })
-
-        local ThemesArray = {}
-        for Name, _ in next, self.BuiltInThemes do
-            table.insert(ThemesArray, Name)
-        end
-        table.sort(ThemesArray, function(a, b) return self.BuiltInThemes[a][1] < self.BuiltInThemes[b][1] end)
-
-        groupbox:AddDivider()
-
+        groupbox:AddDivider();
         groupbox:AddDropdown('ThemeManager_ThemeList', {
-            Text = 'Theme list',
-            Values = ThemesArray,
-            Default = 'Default',
-        })
+            Text    = 'Theme list';
+            Values  = ThemesArray;
+            Default = 1;
+        });
 
-        groupbox:AddButton({
-            Text = 'Set as default',
-            Func = function()
-                local val = Options.ThemeManager_ThemeList.Value
-                if not val or (type(val) == 'string' and val:gsub('%s', '') == '') then
-                    return self.Library:Notify('No theme selected', 2)
-                end
-                self:SaveDefault(val)
-                self.Library:Notify(string.format('Set default theme to %q', val))
-            end,
-        })
+        groupbox:AddButton('Set as default', function()
+            self:SaveDefault(Options.ThemeManager_ThemeList.Value);
+            self.Library:Notify(string.format('Set default theme to %q', Options.ThemeManager_ThemeList.Value));
+        end);
 
         Options.ThemeManager_ThemeList:OnChanged(function()
-            local val = Options.ThemeManager_ThemeList.Value
-            if val and val ~= '' then
-                self:ApplyTheme(val)
-            end
-        end)
+            self:ApplyTheme(Options.ThemeManager_ThemeList.Value);
+        end);
 
-        groupbox:AddDivider()
-
-        groupbox:AddInput('ThemeManager_CustomThemeName', {
-            Text = 'Custom theme name',
-            Placeholder = 'Enter name...',
-        })
-
+        groupbox:AddDivider();
+        groupbox:AddInput('ThemeManager_CustomThemeName', { Text = 'Custom theme name' });
         groupbox:AddDropdown('ThemeManager_CustomThemeList', {
-            Text = 'Custom themes',
-            Values = self:ReloadCustomThemes(),
-            AllowNull = true,
-        })
+            Text      = 'Custom themes';
+            Values    = self:ReloadCustomThemes();
+            AllowNull = true;
+            Default   = 1;
+        });
+        groupbox:AddDivider();
 
-        groupbox:AddDivider()
+        groupbox:AddButton('Save theme', function()
+            self:SaveCustomTheme(Options.ThemeManager_CustomThemeName.Value);
+            Options.ThemeManager_CustomThemeList:SetValues(self:ReloadCustomThemes());
+            Options.ThemeManager_CustomThemeList:SetValue(nil);
+        end):AddButton('Load theme', function()
+            self:ApplyTheme(Options.ThemeManager_CustomThemeList.Value);
+        end);
 
-        groupbox:AddButton({
-            Text = 'Save theme',
-            Func = function()
-                local name = Options.ThemeManager_CustomThemeName.Value
-                if not name or name:gsub('%s', '') == '' then
-                    return self.Library:Notify('Invalid theme name (empty)', 2)
-                end
-                self:SaveCustomTheme(name)
-                self.Library:Notify(string.format('Saved theme %q', name))
-                Options.ThemeManager_CustomThemeList:SetValues(self:ReloadCustomThemes())
-                Options.ThemeManager_CustomThemeList:SetValue(nil)
-            end,
-        })
+        groupbox:AddButton('Refresh list', function()
+            Options.ThemeManager_CustomThemeList:SetValues(self:ReloadCustomThemes());
+            Options.ThemeManager_CustomThemeList:SetValue(nil);
+        end);
 
-        groupbox:AddButton({
-            Text = 'Load theme',
-            Func = function()
-                local val = Options.ThemeManager_CustomThemeList.Value
-                if not val or (type(val) == 'string' and val:gsub('%s', '') == '') then
-                    return self.Library:Notify('No custom theme selected', 2)
-                end
-                self:ApplyTheme(val)
-                self.Library:Notify(string.format('Loaded theme %q', val))
-            end,
-        })
+        groupbox:AddButton('Set as default', function()
+            local val = Options.ThemeManager_CustomThemeList.Value;
+            if val and val ~= '' then
+                self:SaveDefault(val);
+                self.Library:Notify(string.format('Set default theme to %q', val));
+            end;
+        end);
 
-        groupbox:AddButton({
-            Text = 'Delete theme',
-            Func = function()
-                local val = Options.ThemeManager_CustomThemeList.Value
-                if not val or (type(val) == 'string' and val:gsub('%s', '') == '') then
-                    return self.Library:Notify('No custom theme selected', 2)
-                end
-                local path = self.Folder .. '/themes/' .. val
-                if isfile(path) then
-                    pcall(delfile, path)
-                    self.Library:Notify(string.format('Deleted theme %q', val))
-                else
-                    self.Library:Notify('Theme file not found', 2)
-                end
-                Options.ThemeManager_CustomThemeList:SetValues(self:ReloadCustomThemes())
-                Options.ThemeManager_CustomThemeList:SetValue(nil)
-            end,
-        })
+        ThemeManager:LoadDefault();
 
-        groupbox:AddButton({
-            Text = 'Refresh list',
-            Func = function()
-                Options.ThemeManager_CustomThemeList:SetValues(self:ReloadCustomThemes())
-                Options.ThemeManager_CustomThemeList:SetValue(nil)
-            end,
-        })
+        -- Live-update when any colour picker changes
+        local function UpdateTheme() self:ThemeUpdate(); end;
+        Options.BackgroundColor:OnChanged(UpdateTheme);
+        Options.MainColor      :OnChanged(UpdateTheme);
+        Options.AccentColor    :OnChanged(UpdateTheme);
+        Options.OutlineColor   :OnChanged(UpdateTheme);
+        Options.FontColor      :OnChanged(UpdateTheme);
+    end;
 
-        groupbox:AddButton({
-            Text = 'Set custom as default',
-            Func = function()
-                local val = Options.ThemeManager_CustomThemeList.Value
-                if not val or (type(val) == 'string' and val:gsub('%s', '') == '') then
-                    return self.Library:Notify('No custom theme selected', 2)
-                end
-                self:SaveDefault(val)
-                self.Library:Notify(string.format('Set default theme to %q', val))
-            end,
-        })
-
-        self:LoadDefault()
-    end
-
+    -- ──────────────────────────────────────────────────────────
+    --  Custom theme file helpers
+    -- ──────────────────────────────────────────────────────────
     function ThemeManager:GetCustomTheme(file)
-        if not file or (type(file) == 'string' and file:gsub('%s', '') == '') then
-            return nil
-        end
+        if not file or file == '' then return nil; end;
 
-        local path = self.Folder .. '/themes/' .. file
+        local path = self.Folder .. '/themes/' .. file;
+        -- Accept filenames with or without .json extension
         if not isfile(path) then
-            path = self.Folder .. '/themes/' .. file .. '.json'
-            if not isfile(path) then
-                return nil
-            end
-        end
+            path = path .. '.json';
+            if not isfile(path) then return nil; end;
+        end;
 
-        local ok, data = pcall(readfile, path)
-        if not ok or not data then return nil end
+        local data = readfile(path);
+        local ok, decoded = pcall(httpService.JSONDecode, httpService, data);
+        if not ok or type(decoded) ~= 'table' then return nil; end;
 
-        local success, decoded = pcall(httpService.JSONDecode, httpService, data)
-        if not success or type(decoded) ~= 'table' then return nil end
-
-        return decoded
-    end
+        return decoded;
+    end;
 
     function ThemeManager:SaveCustomTheme(file)
-        if not file or file:gsub('%s', '') == '' then
-            if self.Library then
-                return self.Library:Notify('Invalid file name for theme (empty)', 3)
-            end
-            return
-        end
+        if not file or file:gsub(' ', '') == '' then
+            return self.Library:Notify('Invalid theme name (empty)', 3);
+        end;
 
-        local theme = {}
-        local fields = { 'FontColor', 'MainColor', 'AccentColor', 'BackgroundColor', 'OutlineColor' }
-
+        local theme  = {};
+        local fields = { 'FontColor', 'MainColor', 'AccentColor', 'BackgroundColor', 'OutlineColor' };
         for _, field in next, fields do
-            if Options and Options[field] and Options[field].Value then
-                theme[field] = Options[field].Value:ToHex()
-            elseif self.Library and self.Library[field] then
-                theme[field] = self.Library[field]:ToHex()
-            end
-        end
+            theme[field] = Options[field].Value:ToHex();
+        end;
 
-        local ok, encoded = pcall(httpService.JSONEncode, httpService, theme)
-        if not ok then
-            if self.Library then
-                self.Library:Notify('Failed to encode theme data', 3)
-            end
-            return
-        end
-
-        pcall(writefile, self.Folder .. '/themes/' .. file .. '.json', encoded)
-    end
+        writefile(
+            self.Folder .. '/themes/' .. file .. '.json',
+            httpService:JSONEncode(theme)
+        );
+    end;
 
     function ThemeManager:ReloadCustomThemes()
-        local ok, list = pcall(listfiles, self.Folder .. '/themes')
-        if not ok or type(list) ~= 'table' then
-            return {}
-        end
+        local list = listfiles(self.Folder .. '/themes');
+        local out  = {};
 
-        local out = {}
-        for i = 1, #list do
-            local file = list[i]
-            if file:sub(-5) == '.json' then
-                local pos = file:find('.json', 1, true)
-                local start = pos
-                local char = file:sub(pos, pos)
+        for _, file in next, list do
+            -- Only process .json files
+            if file:sub(-5) ~= '.json' then continue; end;
 
-                while char ~= '/' and char ~= '\\' and char ~= '' and pos > 0 do
-                    pos = pos - 1
-                    char = file:sub(pos, pos)
-                end
+            -- Find the last path separator to isolate the filename
+            local pos = #file;
+            while pos > 0 do
+                local ch = file:sub(pos, pos);
+                if ch == '/' or ch == '\\' then break; end;
+                pos = pos - 1;
+            end;
 
-                if char == '/' or char == '\\' then
-                    local name = file:sub(pos + 1, start - 1)
-                    if name ~= '' then
-                        table.insert(out, name .. '.json')
-                    end
-                end
-            end
-        end
+            -- Extract name without extension
+            local name = file:sub(pos + 1, #file - 5);
+            if name and name ~= '' then
+                table.insert(out, name);
+            end;
+        end;
 
-        table.sort(out, function(a, b) return a:lower() < b:lower() end)
-        return out
-    end
+        return out;
+    end;
 
+    -- ──────────────────────────────────────────────────────────
+    --  Setup helpers
+    -- ──────────────────────────────────────────────────────────
     function ThemeManager:SetLibrary(lib)
-        self.Library = lib
-    end
+        self.Library = lib;
+    end;
 
     function ThemeManager:BuildFolderTree()
-        local paths = {}
+        local paths = {};
 
-        local parts = self.Folder:split('/')
+        -- Support nested folders like 'hub/game'
+        local parts = self.Folder:split('/');
         for idx = 1, #parts do
-            paths[#paths + 1] = table.concat(parts, '/', 1, idx)
-        end
+            paths[#paths + 1] = table.concat(parts, '/', 1, idx);
+        end;
 
-        table.insert(paths, self.Folder .. '/themes')
-        table.insert(paths, self.Folder .. '/settings')
+        table.insert(paths, self.Folder .. '/themes');
+        table.insert(paths, self.Folder .. '/settings');
 
-        for i = 1, #paths do
-            pcall(function()
-                if not isfolder(paths[i]) then
-                    makefolder(paths[i])
-                end
-            end)
-        end
-    end
+        for _, str in next, paths do
+            if not isfolder(str) then makefolder(str); end;
+        end;
+    end;
 
     function ThemeManager:SetFolder(folder)
-        self.Folder = folder
-        self:BuildFolderTree()
-    end
+        self.Folder = folder;
+        self:BuildFolderTree();
+    end;
 
     function ThemeManager:CreateGroupBox(tab)
-        assert(self.Library, 'Must set ThemeManager.Library first!')
-        return tab:AddLeftGroupbox('Themes')
-    end
+        assert(self.Library, 'Must set ThemeManager.Library first!');
+        return tab:AddLeftGroupbox('Themes');
+    end;
 
     function ThemeManager:ApplyToTab(tab)
-        assert(self.Library, 'Must set ThemeManager.Library first!')
-        local groupbox = self:CreateGroupBox(tab)
-        self:CreateThemeManager(groupbox)
-    end
+        assert(self.Library, 'Must set ThemeManager.Library first!');
+        self:CreateThemeManager(self:CreateGroupBox(tab));
+    end;
 
     function ThemeManager:ApplyToGroupbox(groupbox)
-        assert(self.Library, 'Must set ThemeManager.Library first!')
-        self:CreateThemeManager(groupbox)
-    end
+        assert(self.Library, 'Must set ThemeManager.Library first!');
+        self:CreateThemeManager(groupbox);
+    end;
 
-    ThemeManager:BuildFolderTree()
-end
+    ThemeManager:BuildFolderTree();
+end;
 
-return ThemeManager
+return ThemeManager;

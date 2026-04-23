@@ -1,16 +1,3 @@
--- ============================================================
---  LinoriaLib  |  Polished & Rounded Edition
---  Fixes applied:
---    • RiskColor syntax error (comma → semicolon)
---    • All UI corners rounded via UICorner instances
---    • Consistent semicolons throughout
---    • BorderSizePixel = 0 on all rounded frames (prevents
---      Roblox from drawing a square border behind the curve)
---    • Tooltip, Notification, ColorPicker, Keybind frame
---      corners all rounded
---    • Minor cleanup: removed stray comments / dead code
--- ============================================================
-
 local InputService  = game:GetService('UserInputService');
 local TextService   = game:GetService('TextService');
 local CoreGui       = game:GetService('CoreGui');
@@ -34,12 +21,10 @@ local Options = {};
 getgenv().Toggles = Toggles;
 getgenv().Options = Options;
 
--- ── Corner radii ────────────────────────────────────────────
-local R_WINDOW  = UDim.new(0, 8);   -- main window / panels
-local R_GROUP   = UDim.new(0, 6);   -- groupboxes / tabboxes
-local R_ELEMENT = UDim.new(0, 4);   -- toggles, sliders, dropdowns
-local R_SMALL   = UDim.new(0, 3);   -- color picker, buttons, tooltips
--- ────────────────────────────────────────────────────────────
+local R_WINDOW  = UDim.new(0, 8);
+local R_GROUP   = UDim.new(0, 6);
+local R_ELEMENT = UDim.new(0, 4);
+local R_SMALL   = UDim.new(0, 3);
 
 local Library = {
     Registry    = {};
@@ -51,7 +36,7 @@ local Library = {
     BackgroundColor = Color3.fromRGB(20,  20,  20);
     AccentColor     = Color3.fromRGB(0,   85,  255);
     OutlineColor    = Color3.fromRGB(50,  50,  50);
-    RiskColor       = Color3.fromRGB(255, 50,  50);   -- FIX: was comma
+    RiskColor       = Color3.fromRGB(255, 50,  50);
 
     Black = Color3.new(0, 0, 0);
     Font  = Enum.Font.Code;
@@ -62,7 +47,6 @@ local Library = {
     ScreenGui      = ScreenGui;
 };
 
--- ── Rainbow ticker ──────────────────────────────────────────
 local RainbowStep = 0;
 local Hue = 0;
 
@@ -77,12 +61,10 @@ table.insert(Library.Signals, RenderStepped:Connect(function(Delta)
     end;
 end));
 
--- ── Helper: add UICorner to an instance ─────────────────────
 local function AddCorner(inst, radius)
     Instance.new('UICorner', inst).CornerRadius = radius or R_SMALL;
 end;
 
--- ── Player / Team helpers ────────────────────────────────────
 local function GetPlayersString()
     local list = Players:GetPlayers();
     for i = 1, #list do list[i] = list[i].Name; end;
@@ -97,7 +79,6 @@ local function GetTeamsString()
     return list;
 end;
 
--- ── Core methods ─────────────────────────────────────────────
 function Library:SafeCallback(f, ...)
     if not f then return; end;
     if not Library.NotifyOnError then return f(...); end;
@@ -308,15 +289,12 @@ Library:GiveSignal(ScreenGui.DescendantRemoving:Connect(function(inst)
     if Library.RegistryMap[inst] then Library:RemoveFromRegistry(inst); end;
 end));
 
--- ═══════════════════════════════════════════════════════════
---  BaseAddons  (ColorPicker, KeyPicker attached to Toggles)
--- ═══════════════════════════════════════════════════════════
 local BaseAddons = {};
 
 do
     local Funcs = {};
 
-    -- ── ColorPicker ──────────────────────────────────────────
+
     function Funcs:AddColorPicker(Idx, Info)
         assert(Info.Default, 'AddColorPicker: Missing default value.');
 
@@ -338,7 +316,7 @@ do
         end;
         ColorPicker:SetHSVFromRGB(ColorPicker.Value);
 
-        -- Small display swatch next to the label
+
         local DisplayFrame = Library:Create('Frame', {
             BackgroundColor3 = ColorPicker.Value;
             BorderSizePixel  = 0;
@@ -358,7 +336,7 @@ do
         });
         AddCorner(CheckerFrame, R_SMALL);
 
-        -- Full picker popup
+
         local PickerFrameOuter = Library:Create('Frame', {
             Name             = 'Color';
             BackgroundColor3 = Library.BackgroundColor;
@@ -579,7 +557,7 @@ do
             Parent         = PickerFrameInner;
         });
 
-        -- Context menu (copy/paste)
+
         local ContextMenu = {};
         do
             ContextMenu.Options   = {};
@@ -692,7 +670,7 @@ do
         Library:AddToRegistry(HueBoxInner,      { BackgroundColor3 = 'MainColor'       });
         Library:AddToRegistry(HueBox,           { TextColor3       = 'FontColor'       });
 
-        -- ── Hue gradient ─────────────────────────────────────
+
         local GradientPoints = {};
         for i = 0, 6 do
             GradientPoints[#GradientPoints + 1] = ColorSequenceKeypoint.new(
@@ -705,7 +683,7 @@ do
             Parent   = HueSelectorInner;
         });
 
-        -- ── Update functions ─────────────────────────────────
+
         local function UpdateDisplay()
             DisplayFrame.BackgroundColor3 = ColorPicker.Value;
             if TransparencyBoxInner then
@@ -747,7 +725,7 @@ do
             Func(ColorPicker.Value);
         end;
 
-        -- Sat/Vib drag
+
         SatVibMap.InputBegan:Connect(function(Input)
             if Input.UserInputType ~= Enum.UserInputType.MouseButton1 then return; end;
             repeat
@@ -764,7 +742,7 @@ do
             Library:AttemptSave();
         end);
 
-        -- Hue drag
+
         HueSelectorInner.InputBegan:Connect(function(Input)
             if Input.UserInputType ~= Enum.UserInputType.MouseButton1 then return; end;
             repeat
@@ -781,7 +759,7 @@ do
             Library:AttemptSave();
         end);
 
-        -- Transparency drag
+
         if TransparencyBoxInner and TransparencyCursor then
             TransparencyBoxInner.InputBegan:Connect(function(Input)
                 if Input.UserInputType ~= Enum.UserInputType.MouseButton1 then return; end;
@@ -798,14 +776,14 @@ do
             end);
         end;
 
-        -- Hex input
+
         HueBox.FocusLost:Connect(function()
             local hex = HueBox.Text:gsub('#', '');
             local ok, col = pcall(Color3.fromHex, hex);
             if ok then ColorPicker:SetValueRGB(col); end;
         end);
 
-        -- RGB input
+
         RgbBox.FocusLost:Connect(function()
             local parts = RgbBox.Text:split(',');
             local r, g, b = tonumber(parts[1]), tonumber(parts[2]), tonumber(parts[3]);
@@ -818,7 +796,7 @@ do
             end;
         end);
 
-        -- Right-click context
+
         DisplayFrame.InputBegan:Connect(function(Input)
             if Input.UserInputType == Enum.UserInputType.MouseButton2 then
                 ContextMenu:Show();
@@ -853,7 +831,7 @@ do
         return ColorPicker;
     end;
 
-    -- ── KeyPicker ─────────────────────────────────────────────
+
     function Funcs:AddKeyPicker(Idx, Info)
         local ToggleLabel = self.TextLabel;
 
@@ -962,7 +940,7 @@ do
             end;
         end));
 
-        -- Register in keybind frame
+
         if Library.KeybindContainer then
             local KBLabel = Library:CreateLabel({
                 Size           = UDim2.new(1, -10, 0, 18);
@@ -985,9 +963,6 @@ do
     BaseAddons.__index = Funcs;
 end;
 
--- ═══════════════════════════════════════════════════════════
---  BaseGroupbox  (shared methods for groupbox / tabbox tabs)
--- ═══════════════════════════════════════════════════════════
 local BaseGroupbox = {};
 do
     local Funcs = {};
@@ -1428,7 +1403,7 @@ do
             Parent         = BoxInner;
         });
 
-        -- Arrow indicator
+
         Library:CreateLabel({
             Position       = UDim2.new(1, -16, 0, 1);
             Size           = UDim2.new(0, 12, 1, 0);
@@ -1439,7 +1414,7 @@ do
             Parent         = BoxInner;
         });
 
-        -- Dropdown list
+
         local ListFrame = Library:Create('Frame', {
             BackgroundColor3 = Library.MainColor;
             BorderSizePixel  = 0;
@@ -1591,7 +1566,7 @@ do
             Func(Dropdown.Value);
         end;
 
-        -- Set initial value
+
         if not Info.AllowNull then
             if Info.Multi then
                 Dropdown.Value = {};
@@ -1661,7 +1636,7 @@ do
         self:AddBlank(5);
         self:Resize();
 
-        -- Allow chaining: btn:AddButton(...)
+
         function Button:AddButton(Text2, Callback2)
             return Funcs.AddButton(self, Text2, Callback2);
         end;
@@ -1720,9 +1695,6 @@ do
     BaseGroupbox.__index = Funcs;
 end;
 
--- ═══════════════════════════════════════════════════════════
---  Watermark
--- ═══════════════════════════════════════════════════════════
 do
     local WatermarkOuter = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor;
@@ -1751,9 +1723,6 @@ do
     Library:MakeDraggable(WatermarkOuter);
 end;
 
--- ═══════════════════════════════════════════════════════════
---  Notification area
--- ═══════════════════════════════════════════════════════════
 do
     local NotifArea = Library:Create('Frame', {
         BackgroundTransparency = 1;
@@ -1775,9 +1744,6 @@ do
     Library.NotificationArea = NotifArea;
 end;
 
--- ═══════════════════════════════════════════════════════════
---  Keybind overlay
--- ═══════════════════════════════════════════════════════════
 do
     local KeybindOuter = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor;
@@ -1832,9 +1798,6 @@ do
     Library:MakeDraggable(KeybindOuter);
 end;
 
--- ═══════════════════════════════════════════════════════════
---  Public helpers
--- ═══════════════════════════════════════════════════════════
 function Library:SetWatermarkVisibility(Bool)
     Library.Watermark.Visible = Bool;
 end;
@@ -1861,7 +1824,7 @@ function Library:Notify(Text, Time)
     AddCorner(NotifyOuter, R_SMALL);
     Library:AddToRegistry(NotifyOuter, { BackgroundColor3 = 'MainColor' }, true);
 
-    -- Accent left bar
+
     local LeftColor = Library:Create('Frame', {
         BackgroundColor3 = Library.AccentColor;
         BorderSizePixel  = 0;
@@ -1894,9 +1857,6 @@ function Library:Notify(Text, Time)
     end);
 end;
 
--- ═══════════════════════════════════════════════════════════
---  CreateWindow
--- ═══════════════════════════════════════════════════════════
 function Library:CreateWindow(...)
     local Arguments = { ... };
     local Config    = { AnchorPoint = Vector2.zero };
@@ -1921,7 +1881,7 @@ function Library:CreateWindow(...)
 
     local Window = { Tabs = {} };
 
-    -- Outer shell (rounded clip frame)
+
     local Outer = Library:Create('Frame', {
         AnchorPoint      = Config.AnchorPoint;
         BackgroundColor3 = Library.BackgroundColor;
@@ -1935,7 +1895,7 @@ function Library:CreateWindow(...)
     AddCorner(Outer, R_WINDOW);
     Library:MakeDraggable(Outer, 28);
 
-    -- Inner content frame
+
     local Inner = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor;
         BorderSizePixel  = 0;
@@ -1946,7 +1906,7 @@ function Library:CreateWindow(...)
     AddCorner(Inner, R_WINDOW);
     Library:AddToRegistry(Inner, { BackgroundColor3 = 'MainColor' });
 
-    -- Accent top bar
+
     local TopBar = Library:Create('Frame', {
         BackgroundColor3 = Library.AccentColor;
         BorderSizePixel  = 0;
@@ -1967,7 +1927,7 @@ function Library:CreateWindow(...)
         Parent         = Inner;
     });
 
-    -- Main section (background area)
+
     local MainSection = Library:Create('Frame', {
         BackgroundColor3 = Library.BackgroundColor;
         BorderSizePixel  = 0;
@@ -1979,7 +1939,7 @@ function Library:CreateWindow(...)
     AddCorner(MainSection, R_GROUP);
     Library:AddToRegistry(MainSection, { BackgroundColor3 = 'BackgroundColor' });
 
-    -- Tab button row
+
     local TabArea = Library:Create('Frame', {
         BackgroundTransparency = 1;
         Position               = UDim2.new(0, 8, 0, 8);
@@ -1994,7 +1954,7 @@ function Library:CreateWindow(...)
         Parent        = TabArea;
     });
 
-    -- Tab content container
+
     local TabContainer = Library:Create('Frame', {
         BackgroundColor3 = Library.MainColor;
         BorderSizePixel  = 0;
@@ -2033,7 +1993,7 @@ function Library:CreateWindow(...)
             Parent   = TabButton;
         });
 
-        -- Blocker covers the bottom border when tab is active
+
         local Blocker = Library:Create('Frame', {
             BackgroundColor3   = Library.MainColor;
             BorderSizePixel    = 0;
@@ -2103,7 +2063,7 @@ function Library:CreateWindow(...)
             TabListLayout:ApplyLayout();
         end;
 
-        -- ── AddGroupbox ──────────────────────────────────────
+
         function Tab:AddGroupbox(Info)
             local Groupbox = {};
 
@@ -2119,7 +2079,7 @@ function Library:CreateWindow(...)
             AddCorner(BoxOuter, R_GROUP);
             Library:AddToRegistry(BoxOuter, { BackgroundColor3 = 'BackgroundColor' });
 
-            -- Accent top strip
+
             local GBHighlight = Library:Create('Frame', {
                 BackgroundColor3 = Library.AccentColor;
                 BorderSizePixel  = 0;
@@ -2181,7 +2141,7 @@ function Library:CreateWindow(...)
             return Tab:AddGroupbox({ Side = 2; Name = Name });
         end;
 
-        -- ── AddTabbox ────────────────────────────────────────
+
         function Tab:AddTabbox(Info)
             local Tabbox = { Tabs = {} };
             local Side = Info.Side == 1 and LeftSide or RightSide;
@@ -2313,7 +2273,7 @@ function Library:CreateWindow(...)
                 TBTab:AddBlank(3);
                 TBTab:Resize();
 
-                -- Show first tab automatically
+
                 if #TabboxButtons:GetChildren() == 2 then
                     TBTab:Show();
                 end;
@@ -2338,7 +2298,7 @@ function Library:CreateWindow(...)
             end;
         end);
 
-        -- Auto-show first tab
+
         if #TabContainer:GetChildren() == 1 then
             Tab:ShowTab();
         end;
@@ -2347,7 +2307,7 @@ function Library:CreateWindow(...)
         return Tab;
     end;
 
-    -- ── Fade toggle ──────────────────────────────────────────
+
     local ModalElement = Library:Create('TextButton', {
         BackgroundTransparency = 1;
         Size                   = UDim2.new(0, 0, 0, 0);
@@ -2437,9 +2397,6 @@ function Library:CreateWindow(...)
     return Window;
 end;
 
--- ═══════════════════════════════════════════════════════════
---  Player list auto-update for dropdowns
--- ═══════════════════════════════════════════════════════════
 local function OnPlayerChange()
     local list = GetPlayersString();
     for _, v in next, Options do

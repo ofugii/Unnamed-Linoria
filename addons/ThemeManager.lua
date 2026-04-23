@@ -1,15 +1,3 @@
--- ============================================================
---  ThemeManager  |  Polished & Rounded Edition
---  Fixes applied:
---    • Consistent semicolons throughout
---    • RgbBoxBase:FindFirstChild now uses safer FindFirstChildWhichIsA
---    • SaveDefault path now consistent with BuildFolderTree
---    • ReloadCustomThemes: robust path parsing that handles both
---      forward and back slashes, strips .json extension correctly
---    • GetCustomTheme: validated return type (must be table)
---    • All BuiltInTheme entries use consistent formatting
--- ============================================================
-
 local httpService = game:GetService('HttpService');
 
 local ThemeManager = {};
@@ -28,15 +16,15 @@ do
         ['Quartz']       = { 8, httpService:JSONDecode('{"FontColor":"ffffff","MainColor":"232330","AccentColor":"426e87","BackgroundColor":"1d1b26","OutlineColor":"27232f"}') };
     };
 
-    -- ──────────────────────────────────────────────────────────
-    --  Core: apply a named or custom theme
-    -- ──────────────────────────────────────────────────────────
+
+
+
     function ThemeManager:ApplyTheme(theme)
         local customData = self:GetCustomTheme(theme);
         local data = customData or self.BuiltInThemes[theme];
         if not data then return; end;
 
-        -- Custom themes are plain dicts; built-in entries are { index, dict }.
+
         local scheme = customData or data[2];
 
         for key, col in next, scheme do
@@ -61,9 +49,9 @@ do
         self.Library:UpdateColorsUsingRegistry();
     end;
 
-    -- ──────────────────────────────────────────────────────────
-    --  Load the saved default (or fall back to 'Default')
-    -- ──────────────────────────────────────────────────────────
+
+
+
     function ThemeManager:LoadDefault()
         local theme    = 'Default';
         local content  = isfile(self.Folder .. '/themes/default.txt')
@@ -92,18 +80,18 @@ do
         writefile(self.Folder .. '/themes/default.txt', theme);
     end;
 
-    -- ──────────────────────────────────────────────────────────
-    --  Build the full UI section inside a groupbox
-    -- ──────────────────────────────────────────────────────────
+
+
+
     function ThemeManager:CreateThemeManager(groupbox)
-        -- Per-colour pickers
+
         groupbox:AddLabel('Background color'):AddColorPicker('BackgroundColor', { Default = self.Library.BackgroundColor });
         groupbox:AddLabel('Main color')      :AddColorPicker('MainColor',       { Default = self.Library.MainColor       });
         groupbox:AddLabel('Accent color')    :AddColorPicker('AccentColor',     { Default = self.Library.AccentColor     });
         groupbox:AddLabel('Outline color')   :AddColorPicker('OutlineColor',    { Default = self.Library.OutlineColor    });
         groupbox:AddLabel('Font color')      :AddColorPicker('FontColor',       { Default = self.Library.FontColor       });
 
-        -- Build a sorted array of built-in theme names
+
         local ThemesArray = {};
         for Name in next, self.BuiltInThemes do
             table.insert(ThemesArray, Name);
@@ -161,7 +149,7 @@ do
 
         ThemeManager:LoadDefault();
 
-        -- Live-update when any colour picker changes
+
         local function UpdateTheme() self:ThemeUpdate(); end;
         Options.BackgroundColor:OnChanged(UpdateTheme);
         Options.MainColor      :OnChanged(UpdateTheme);
@@ -170,14 +158,14 @@ do
         Options.FontColor      :OnChanged(UpdateTheme);
     end;
 
-    -- ──────────────────────────────────────────────────────────
-    --  Custom theme file helpers
-    -- ──────────────────────────────────────────────────────────
+
+
+
     function ThemeManager:GetCustomTheme(file)
         if not file or file == '' then return nil; end;
 
         local path = self.Folder .. '/themes/' .. file;
-        -- Accept filenames with or without .json extension
+
         if not isfile(path) then
             path = path .. '.json';
             if not isfile(path) then return nil; end;
@@ -212,10 +200,10 @@ do
         local out  = {};
 
         for _, file in next, list do
-            -- Only process .json files
+
             if file:sub(-5) ~= '.json' then continue; end;
 
-            -- Find the last path separator to isolate the filename
+
             local pos = #file;
             while pos > 0 do
                 local ch = file:sub(pos, pos);
@@ -223,7 +211,7 @@ do
                 pos = pos - 1;
             end;
 
-            -- Extract name without extension
+
             local name = file:sub(pos + 1, #file - 5);
             if name and name ~= '' then
                 table.insert(out, name);
@@ -233,9 +221,9 @@ do
         return out;
     end;
 
-    -- ──────────────────────────────────────────────────────────
-    --  Setup helpers
-    -- ──────────────────────────────────────────────────────────
+
+
+
     function ThemeManager:SetLibrary(lib)
         self.Library = lib;
     end;
@@ -243,7 +231,7 @@ do
     function ThemeManager:BuildFolderTree()
         local paths = {};
 
-        -- Support nested folders like 'hub/game'
+
         local parts = self.Folder:split('/');
         for idx = 1, #parts do
             paths[#paths + 1] = table.concat(parts, '/', 1, idx);

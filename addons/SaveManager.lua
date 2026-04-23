@@ -1,17 +1,3 @@
--- ============================================================
---  SaveManager  |  Polished & Rounded Edition
---  Fixes applied:
---    • Consistent semicolons throughout
---    • Dropdown.Save: 'mutli' typo fixed → 'multi'
---    • RefreshConfigList: robust path parsing (same fix as
---      ThemeManager:ReloadCustomThemes) — strips extension
---      and handles both / and \ separators correctly
---    • LoadAutoloadConfig: guard for empty autoload.txt
---    • BuildConfigSection: SaveManager_ConfigList default
---      gracefully handled when list is empty
---    • All table entries use consistent semicolons
--- ============================================================
-
 local httpService = game:GetService('HttpService');
 
 local SaveManager = {};
@@ -20,9 +6,9 @@ do
     SaveManager.Ignore  = {};
     SaveManager.Library = nil;
 
-    -- ──────────────────────────────────────────────────────────
-    --  Type parsers  (Save → serialisable table, Load → apply)
-    -- ──────────────────────────────────────────────────────────
+
+
+
     SaveManager.Parser = {
         Toggle = {
             Save = function(idx, obj)
@@ -44,7 +30,7 @@ do
 
         Dropdown = {
             Save = function(idx, obj)
-                -- FIX: 'mutli' → 'multi'
+
                 return { type = 'Dropdown'; idx = idx; value = obj.Value; multi = obj.Multi };
             end;
             Load = function(idx, data)
@@ -84,9 +70,9 @@ do
         };
     };
 
-    -- ──────────────────────────────────────────────────────────
-    --  Ignore list helpers
-    -- ──────────────────────────────────────────────────────────
+
+
+
     function SaveManager:SetIgnoreIndexes(list)
         for _, key in next, list do
             self.Ignore[key] = true;
@@ -98,9 +84,9 @@ do
         self:BuildFolderTree();
     end;
 
-    -- ──────────────────────────────────────────────────────────
-    --  Save / Load
-    -- ──────────────────────────────────────────────────────────
+
+
+
     function SaveManager:Save(name)
         if not name then return false, 'no config file selected'; end;
 
@@ -136,7 +122,7 @@ do
 
         for _, option in next, decoded.objects do
             if self.Parser[option.type] then
-                -- task.spawn prevents one bad option from blocking the rest
+
                 task.spawn(function()
                     self.Parser[option.type].Load(option.idx, option);
                 end);
@@ -146,9 +132,9 @@ do
         return true;
     end;
 
-    -- ──────────────────────────────────────────────────────────
-    --  Convenience: exclude theme-related keys from configs
-    -- ──────────────────────────────────────────────────────────
+
+
+
     function SaveManager:IgnoreThemeSettings()
         self:SetIgnoreIndexes({
             'BackgroundColor'; 'MainColor'; 'AccentColor'; 'OutlineColor'; 'FontColor';
@@ -156,9 +142,9 @@ do
         });
     end;
 
-    -- ──────────────────────────────────────────────────────────
-    --  Folder setup
-    -- ──────────────────────────────────────────────────────────
+
+
+
     function SaveManager:BuildFolderTree()
         local paths = {
             self.Folder;
@@ -170,9 +156,9 @@ do
         end;
     end;
 
-    -- ──────────────────────────────────────────────────────────
-    --  List configs on disk
-    -- ──────────────────────────────────────────────────────────
+
+
+
     function SaveManager:RefreshConfigList()
         local list = listfiles(self.Folder .. '/settings');
         local out  = {};
@@ -180,7 +166,7 @@ do
         for _, file in next, list do
             if file:sub(-5) ~= '.json' then continue; end;
 
-            -- Find last separator to get just the filename
+
             local pos = #file;
             while pos > 0 do
                 local ch = file:sub(pos, pos);
@@ -188,7 +174,7 @@ do
                 pos = pos - 1;
             end;
 
-            -- Strip .json extension
+
             local name = file:sub(pos + 1, #file - 5);
             if name and name ~= '' then
                 table.insert(out, name);
@@ -202,15 +188,15 @@ do
         self.Library = library;
     end;
 
-    -- ──────────────────────────────────────────────────────────
-    --  Auto-load on start
-    -- ──────────────────────────────────────────────────────────
+
+
+
     function SaveManager:LoadAutoloadConfig()
         local autoloadFile = self.Folder .. '/settings/autoload.txt';
         if not isfile(autoloadFile) then return; end;
 
         local name = readfile(autoloadFile);
-        -- Guard against empty / whitespace-only file
+
         if not name or name:gsub(' ', '') == '' then return; end;
 
         local ok, err = self:Load(name);
@@ -221,9 +207,9 @@ do
         self.Library:Notify(string.format('Auto-loaded config %q', name), 3);
     end;
 
-    -- ──────────────────────────────────────────────────────────
-    --  Build the config UI section inside a tab
-    -- ──────────────────────────────────────────────────────────
+
+
+
     function SaveManager:BuildConfigSection(tab)
         assert(self.Library, 'Must set SaveManager.Library first!');
 
@@ -289,7 +275,7 @@ do
             self.Library:Notify(string.format('Set %q to auto-load', name), 3);
         end);
 
-        -- Autoload label
+
         local autoloadName = 'none';
         local autoloadFile = self.Folder .. '/settings/autoload.txt';
         if isfile(autoloadFile) then
@@ -298,7 +284,7 @@ do
         end;
         SaveManager.AutoloadLabel = section:AddLabel('Autoload: ' .. autoloadName, true);
 
-        -- Ignore internal config UI indices from saves
+
         SaveManager:SetIgnoreIndexes({ 'SaveManager_ConfigList'; 'SaveManager_ConfigName' });
     end;
 

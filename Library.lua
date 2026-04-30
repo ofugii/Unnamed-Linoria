@@ -2113,6 +2113,7 @@ do
             BackgroundColor3 = Library.MainColor;
             BorderColor3 = Library.OutlineColor;
             BorderMode = Enum.BorderMode.Inset;
+            ClipsDescendants = true;
             Size = UDim2.new(1, 0, 1, 0);
             ZIndex = 6;
             Parent = SliderOuter;
@@ -2130,32 +2131,13 @@ do
 
         local Fill = Library:Create('Frame', {
             BackgroundColor3 = Library.AccentColor;
-            BorderColor3 = Library.AccentColorDark;
+            BorderSizePixel = 0;
             Size = UDim2.new(0, 0, 1, 0);
             ZIndex = 7;
             Parent = SliderInner;
         });
 
-        Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 5);
-            Parent = Fill;
-        });
-
         Library:AddToRegistry(Fill, {
-            BackgroundColor3 = 'AccentColor';
-            BorderColor3 = 'AccentColorDark';
-        });
-
-        local HideBorderRight = Library:Create('Frame', {
-            BackgroundColor3 = Library.AccentColor;
-            BorderSizePixel = 0;
-            Position = UDim2.new(1, 0, 0, 0);
-            Size = UDim2.new(0, 1, 1, 0);
-            ZIndex = 8;
-            Parent = Fill;
-        });
-
-        Library:AddToRegistry(HideBorderRight, {
             BackgroundColor3 = 'AccentColor';
         });
 
@@ -2178,7 +2160,6 @@ do
 
         function Slider:UpdateColors()
             Fill.BackgroundColor3 = Library.AccentColor;
-            Fill.BorderColor3 = Library.AccentColorDark;
         end;
 
         function Slider:Display()
@@ -2194,8 +2175,6 @@ do
 
             local X = math.ceil(Library:MapValue(Slider.Value, Slider.Min, Slider.Max, 0, Slider.MaxSize));
             Fill.Size = UDim2.new(0, X, 1, 0);
-
-            HideBorderRight.Visible = not (X == Slider.MaxSize or X == 0);
         end;
 
         function Slider:OnChanged(Func)
@@ -2232,6 +2211,25 @@ do
             Library:SafeCallback(Slider.Changed, Slider.Value);
         end;
 
+        local function SliderHandleDrag(startInputPos, startFillOffset)
+            local gPos = startFillOffset;
+            local mPos = startInputPos;
+
+            local function updateFromX(currentX)
+                local nX = math.clamp(gPos + (currentX - mPos), 0, Slider.MaxSize);
+                local nValue = Slider:GetValueFromXOffset(nX);
+                local OldValue = Slider.Value;
+                Slider.Value = nValue;
+                Slider:Display();
+                if nValue ~= OldValue then
+                    Library:SafeCallback(Slider.Callback, Slider.Value);
+                    Library:SafeCallback(Slider.Changed, Slider.Value);
+                end;
+            end
+
+            return updateFromX;
+        end
+
         SliderInner.InputBegan:Connect(function(Input)
             if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
                 local mPos = Mouse.X;
@@ -2257,6 +2255,31 @@ do
                 end;
 
                 Library:AttemptSave();
+            elseif Input.UserInputType == Enum.UserInputType.Touch and not Library:MouseIsOverOpenedFrame() then
+                local touchStartX = Input.Position.X;
+                local gPos = Fill.Size.X.Offset;
+                local Diff = touchStartX - (Fill.AbsolutePosition.X + gPos);
+
+                local moved = Input.Changed:Connect(function()
+                    if Input.UserInputType == Enum.UserInputType.Touch then
+                        local nX = math.clamp(gPos + (Input.Position.X - touchStartX) + Diff, 0, Slider.MaxSize);
+                        local nValue = Slider:GetValueFromXOffset(nX);
+                        local OldValue = Slider.Value;
+                        Slider.Value = nValue;
+                        Slider:Display();
+                        if nValue ~= OldValue then
+                            Library:SafeCallback(Slider.Callback, Slider.Value);
+                            Library:SafeCallback(Slider.Changed, Slider.Value);
+                        end;
+                    end
+                end)
+
+                Input.Changed:Connect(function()
+                    if Input.UserInputState == Enum.UserInputState.End then
+                        moved:Disconnect();
+                        Library:AttemptSave();
+                    end
+                end)
             end;
         end);
 

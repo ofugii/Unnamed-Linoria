@@ -34,10 +34,38 @@ local Library = {
     BackgroundColor = Color3.fromRGB(20, 20, 20);
     AccentColor = Color3.fromRGB(0, 85, 255);
     OutlineColor = Color3.fromRGB(50, 50, 50);
-    RiskColor = Color3.fromRGB(255, 50, 50),
+    RiskColor = Color3.fromRGB(255, 50, 50);
+    NotificationColor = Color3.fromRGB(28, 28, 28);
+    WatermarkColor = Color3.fromRGB(28, 28, 28);
 
     Black = Color3.new(0, 0, 0);
-    Font = Enum.Font.Code,
+    Font = Enum.Font.Code;
+    FontSize = 14;
+    TitleFontSize = 16;
+
+    WindowCornerRadius = UDim.new(0, 8);
+    GroupboxCornerRadius = UDim.new(0, 6);
+    TabButtonCornerRadius = UDim.new(0, 4);
+    ButtonCornerRadius = UDim.new(0, 5);
+    SliderCornerRadius = UDim.new(0, 6);
+    ToggleCornerRadius = UDim.new(0, 3);
+    InputCornerRadius = UDim.new(0, 5);
+    DropdownCornerRadius = UDim.new(0, 5);
+    ColorPickerCornerRadius = UDim.new(0, 6);
+    KeyPickerCornerRadius = UDim.new(0, 4);
+    NotificationCornerRadius = UDim.new(0, 6);
+    WatermarkCornerRadius = UDim.new(0, 6);
+    KeybindCornerRadius = UDim.new(0, 6);
+    TooltipCornerRadius = UDim.new(0, 4);
+
+    TabIndicatorHeight = 2;
+    TabIndicatorEnabled = true;
+    GroupboxHeaderHeight = 20;
+    SliderHeight = 13;
+    ToggleSize = 13;
+    ButtonHeight = 20;
+    InputHeight = 20;
+    DropdownHeight = 20;
 
     OpenedFrames = {};
     DependencyBoxes = {};
@@ -45,6 +73,14 @@ local Library = {
     Signals = {};
     ScreenGui = ScreenGui;
 };
+
+function Library:SetTheme(Theme)
+    for Key, Value in next, Theme do
+        Library[Key] = Value;
+    end;
+    Library.AccentColorDark = Library:GetDarkerColor(Library.AccentColor);
+    Library:UpdateColorsUsingRegistry();
+end;
 
 local RainbowStep = 0
 local Hue = 0
@@ -148,7 +184,7 @@ function Library:CreateLabel(Properties, IsHud)
         BackgroundTransparency = 1;
         Font = Library.Font;
         TextColor3 = Library.FontColor;
-        TextSize = 16;
+        TextSize = Library.FontSize;
         TextStrokeTransparency = 0;
     });
 
@@ -203,14 +239,14 @@ function Library:AddToolTip(InfoStr, HoverInstance)
     })
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 4);
+        CornerRadius = Library.TooltipCornerRadius;
         Parent = Tooltip;
     });
 
     local Label = Library:CreateLabel({
         Position = UDim2.fromOffset(3, 1),
         Size = UDim2.fromOffset(X, Y);
-        TextSize = 14;
+        TextSize = Library.FontSize;
         Text = InfoStr,
         TextColor3 = Library.FontColor,
         TextXAlignment = Enum.TextXAlignment.Left;
@@ -434,7 +470,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = Library.KeyPickerCornerRadius;
             Parent = DisplayFrame;
         });
 
@@ -459,7 +495,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 6);
+            CornerRadius = Library.ColorPickerCornerRadius;
             Parent = PickerFrameOuter;
         });
 
@@ -477,7 +513,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 6);
+            CornerRadius = Library.ColorPickerCornerRadius;
             Parent = PickerFrameInner;
         });
 
@@ -498,7 +534,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = Library.KeyPickerCornerRadius;
             Parent = SatVibMapOuter;
         });
 
@@ -512,7 +548,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = Library.KeyPickerCornerRadius;
             Parent = SatVibMapInner;
         });
 
@@ -525,7 +561,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = Library.KeyPickerCornerRadius;
             Parent = SatVibMap;
         });
 
@@ -557,7 +593,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = Library.KeyPickerCornerRadius;
             Parent = HueSelectorOuter;
         });
 
@@ -570,7 +606,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = Library.KeyPickerCornerRadius;
             Parent = HueSelectorInner;
         });
 
@@ -592,7 +628,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = Library.KeyPickerCornerRadius;
             Parent = HueBoxOuter;
         });
 
@@ -606,7 +642,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = Library.KeyPickerCornerRadius;
             Parent = HueBoxInner;
         });
 
@@ -628,7 +664,7 @@ do
             PlaceholderText = 'Hex color',
             Text = '#FFFFFF',
             TextColor3 = Library.FontColor;
-            TextSize = 14;
+            TextSize = Library.FontSize;
             TextStrokeTransparency = 0;
             TextXAlignment = Enum.TextXAlignment.Left;
             ZIndex = 20,
@@ -661,7 +697,7 @@ do
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 4);
+                CornerRadius = Library.KeyPickerCornerRadius;
                 Parent = TransparencyBoxOuter;
             });
 
@@ -675,7 +711,7 @@ do
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 4);
+                CornerRadius = Library.KeyPickerCornerRadius;
                 Parent = TransparencyBoxInner;
             });
 
@@ -703,7 +739,7 @@ do
             Size = UDim2.new(1, 0, 0, 14);
             Position = UDim2.fromOffset(5, 5);
             TextXAlignment = Enum.TextXAlignment.Left;
-            TextSize = 14;
+            TextSize = Library.FontSize;
             Text = ColorPicker.Title,
             TextWrapped = false;
             ZIndex = 16;
@@ -723,7 +759,7 @@ do
             })
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 6);
+                CornerRadius = Library.ColorPickerCornerRadius;
                 Parent = ContextMenu.Container;
             });
 
@@ -737,7 +773,7 @@ do
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 6);
+                CornerRadius = Library.ColorPickerCornerRadius;
                 Parent = ContextMenu.Inner;
             });
 
@@ -802,7 +838,7 @@ do
                 local Button = Library:CreateLabel({
                     Active = false;
                     Size = UDim2.new(1, 0, 0, 15);
-                    TextSize = 13;
+                    TextSize = Library.FontSize - 1;
                     Text = Str;
                     ZIndex = 16;
                     Parent = self.Inner;
@@ -1087,7 +1123,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = Library.KeyPickerCornerRadius;
             Parent = PickOuter;
         });
 
@@ -1101,7 +1137,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = Library.KeyPickerCornerRadius;
             Parent = PickInner;
         });
 
@@ -1112,7 +1148,7 @@ do
 
         local DisplayLabel = Library:CreateLabel({
             Size = UDim2.new(1, 0, 1, 0);
-            TextSize = 13;
+            TextSize = Library.FontSize - 1;
             Text = Info.Default;
             TextWrapped = true;
             ZIndex = 8;
@@ -1129,7 +1165,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 6);
+            CornerRadius = Library.ColorPickerCornerRadius;
             Parent = ModeSelectOuter;
         });
 
@@ -1147,7 +1183,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 6);
+            CornerRadius = Library.ColorPickerCornerRadius;
             Parent = ModeSelectInner;
         });
 
@@ -1165,7 +1201,7 @@ do
         local ContainerLabel = Library:CreateLabel({
             TextXAlignment = Enum.TextXAlignment.Left;
             Size = UDim2.new(1, 0, 0, 18);
-            TextSize = 13;
+            TextSize = Library.FontSize - 1;
             Visible = false;
             ZIndex = 110;
             Parent = Library.KeybindContainer;
@@ -1180,7 +1216,7 @@ do
             local Label = Library:CreateLabel({
                 Active = false;
                 Size = UDim2.new(1, 0, 0, 15);
-                TextSize = 13;
+                TextSize = Library.FontSize - 1;
                 Text = Mode;
                 ZIndex = 16;
                 Parent = ModeSelectInner;
@@ -1433,7 +1469,7 @@ do
 
         local TextLabel = Library:CreateLabel({
             Size = UDim2.new(1, -4, 0, 15);
-            TextSize = 14;
+            TextSize = Library.FontSize;
             Text = Text;
             TextWrapped = DoesWrap or false,
             TextXAlignment = Enum.TextXAlignment.Left;
@@ -1509,7 +1545,7 @@ do
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 5);
+                CornerRadius = Library.ButtonCornerRadius;
                 Parent = Outer;
             });
 
@@ -1523,13 +1559,13 @@ do
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 5);
+                CornerRadius = Library.ButtonCornerRadius;
                 Parent = Inner;
             });
 
             local Label = Library:CreateLabel({
                 Size = UDim2.new(1, 0, 1, 0);
-                TextSize = 14;
+                TextSize = Library.FontSize;
                 Text = Button.Text;
                 ZIndex = 6;
                 Parent = Inner;
@@ -1692,7 +1728,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 3);
+            CornerRadius = Library.ToggleCornerRadius;
             Parent = DividerOuter;
         });
 
@@ -1706,7 +1742,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 3);
+            CornerRadius = Library.ToggleCornerRadius;
             Parent = DividerInner;
         });
 
@@ -1739,7 +1775,7 @@ do
 
         local InputLabel = Library:CreateLabel({
             Size = UDim2.new(1, 0, 0, 15);
-            TextSize = 14;
+            TextSize = Library.FontSize;
             Text = Info.Text;
             TextXAlignment = Enum.TextXAlignment.Left;
             ZIndex = 5;
@@ -1757,7 +1793,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 5);
+            CornerRadius = Library.InputCornerRadius;
             Parent = TextBoxOuter;
         });
 
@@ -1771,7 +1807,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 5);
+            CornerRadius = Library.InputCornerRadius;
             Parent = TextBoxInner;
         });
 
@@ -1821,7 +1857,7 @@ do
 
             Text = Info.Default or '';
             TextColor3 = Library.FontColor;
-            TextSize = 14;
+            TextSize = Library.FontSize;
             TextStrokeTransparency = 0;
             TextXAlignment = Enum.TextXAlignment.Left;
 
@@ -1934,7 +1970,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 3);
+            CornerRadius = Library.ToggleCornerRadius;
             Parent = ToggleOuter;
         });
 
@@ -1952,7 +1988,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 3);
+            CornerRadius = Library.ToggleCornerRadius;
             Parent = ToggleInner;
         });
 
@@ -1964,7 +2000,7 @@ do
         local ToggleLabel = Library:CreateLabel({
             Size = UDim2.new(0, 216, 1, 0);
             Position = UDim2.new(1, 6, 0, 0);
-            TextSize = 14;
+            TextSize = Library.FontSize;
             Text = Info.Text;
             TextXAlignment = Enum.TextXAlignment.Left;
             ZIndex = 6;
@@ -2081,7 +2117,7 @@ do
         if not Info.Compact then
             Library:CreateLabel({
                 Size = UDim2.new(1, 0, 0, 10);
-                TextSize = 14;
+                TextSize = Library.FontSize;
                 Text = Info.Text;
                 TextXAlignment = Enum.TextXAlignment.Left;
                 TextYAlignment = Enum.TextYAlignment.Bottom;
@@ -2095,13 +2131,13 @@ do
         local SliderOuter = Library:Create('Frame', {
             BackgroundColor3 = Color3.new(0, 0, 0);
             BorderColor3 = Color3.new(0, 0, 0);
-            Size = UDim2.new(1, -4, 0, 13);
+            Size = UDim2.new(1, -4, 0, Library.SliderHeight);
             ZIndex = 5;
             Parent = Container;
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 5);
+            CornerRadius = Library.SliderCornerRadius;
             Parent = SliderOuter;
         });
 
@@ -2120,7 +2156,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 5);
+            CornerRadius = Library.SliderCornerRadius;
             Parent = SliderInner;
         });
 
@@ -2137,13 +2173,18 @@ do
             Parent = SliderInner;
         });
 
+        Library:Create('UICorner', {
+            CornerRadius = Library.SliderCornerRadius;
+            Parent = Fill;
+        });
+
         Library:AddToRegistry(Fill, {
             BackgroundColor3 = 'AccentColor';
         });
 
         local DisplayLabel = Library:CreateLabel({
             Size = UDim2.new(1, 0, 1, 0);
-            TextSize = 14;
+            TextSize = Library.FontSize;
             Text = 'Infinite';
             ZIndex = 9;
             Parent = SliderInner;
@@ -2325,7 +2366,7 @@ do
         if not Info.Compact then
             local DropdownLabel = Library:CreateLabel({
                 Size = UDim2.new(1, 0, 0, 10);
-                TextSize = 14;
+                TextSize = Library.FontSize;
                 Text = Info.Text;
                 TextXAlignment = Enum.TextXAlignment.Left;
                 TextYAlignment = Enum.TextYAlignment.Bottom;
@@ -2351,7 +2392,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 5);
+            CornerRadius = Library.DropdownCornerRadius;
             Parent = DropdownOuter;
         });
 
@@ -2369,7 +2410,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 5);
+            CornerRadius = Library.DropdownCornerRadius;
             Parent = DropdownInner;
         });
 
@@ -2400,7 +2441,7 @@ do
         local ItemList = Library:CreateLabel({
             Position = UDim2.new(0, 5, 0, 0);
             Size = UDim2.new(1, -5, 1, 0);
-            TextSize = 14;
+            TextSize = Library.FontSize;
             Text = '--';
             TextXAlignment = Enum.TextXAlignment.Left;
             TextWrapped = true;
@@ -2428,7 +2469,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 5);
+            CornerRadius = Library.DropdownCornerRadius;
             Parent = ListOuter;
         });
 
@@ -2456,7 +2497,7 @@ do
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 5);
+            CornerRadius = Library.DropdownCornerRadius;
             Parent = ListInner;
         });
 
@@ -2560,7 +2601,7 @@ do
                     Active = false;
                     Size = UDim2.new(1, -6, 1, 0);
                     Position = UDim2.new(0, 6, 0, 0);
-                    TextSize = 14;
+                    TextSize = Library.FontSize;
                     Text = Value;
                     TextXAlignment = Enum.TextXAlignment.Left;
                     ZIndex = 25;
@@ -2868,7 +2909,7 @@ do
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 6);
+        CornerRadius = Library.WatermarkCornerRadius;
         Parent = WatermarkOuter;
     });
 
@@ -2882,7 +2923,7 @@ do
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 6);
+        CornerRadius = Library.WatermarkCornerRadius;
         Parent = WatermarkInner;
     });
 
@@ -2900,7 +2941,7 @@ do
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 5);
+        CornerRadius = Library.NotificationCornerRadius;
         Parent = InnerFrame;
     });
 
@@ -2925,7 +2966,7 @@ do
     local WatermarkLabel = Library:CreateLabel({
         Position = UDim2.new(0, 5, 0, 0);
         Size = UDim2.new(1, -4, 1, 0);
-        TextSize = 14;
+        TextSize = Library.FontSize;
         TextXAlignment = Enum.TextXAlignment.Left;
         ZIndex = 203;
         Parent = InnerFrame;
@@ -2948,7 +2989,7 @@ do
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 6);
+        CornerRadius = Library.KeybindCornerRadius;
         Parent = KeybindOuter;
     });
 
@@ -2962,7 +3003,7 @@ do
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 6);
+        CornerRadius = Library.KeybindCornerRadius;
         Parent = KeybindInner;
     });
 
@@ -3044,7 +3085,7 @@ function Library:Notify(Text, Time)
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 6);
+        CornerRadius = Library.NotificationCornerRadius;
         Parent = NotifyOuter;
     });
 
@@ -3058,7 +3099,7 @@ function Library:Notify(Text, Time)
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 6);
+        CornerRadius = Library.NotificationCornerRadius;
         Parent = NotifyInner;
     });
 
@@ -3077,7 +3118,7 @@ function Library:Notify(Text, Time)
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 5);
+        CornerRadius = Library.NotificationCornerRadius;
         Parent = InnerFrame;
     });
 
@@ -3104,7 +3145,7 @@ function Library:Notify(Text, Time)
         Size = UDim2.new(1, -4, 1, 0);
         Text = Text;
         TextXAlignment = Enum.TextXAlignment.Left;
-        TextSize = 14;
+        TextSize = Library.FontSize;
         ZIndex = 103;
         Parent = InnerFrame;
     });
@@ -3119,7 +3160,7 @@ function Library:Notify(Text, Time)
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 3);
+        CornerRadius = Library.ToggleCornerRadius;
         Parent = LeftColor;
     });
 
@@ -3179,7 +3220,7 @@ function Library:CreateWindow(...)
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 8);
+        CornerRadius = Library.WindowCornerRadius;
         Parent = Outer;
     });
 
@@ -3196,7 +3237,7 @@ function Library:CreateWindow(...)
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 8);
+        CornerRadius = Library.WindowCornerRadius;
         Parent = Inner;
     });
 
@@ -3209,6 +3250,7 @@ function Library:CreateWindow(...)
         Position = UDim2.new(0, 0, 0, 0);
         Size = UDim2.new(1, 0, 0, 25);
         Text = Config.Title or '';
+        TextSize = Library.TitleFontSize;
         TextXAlignment = Enum.TextXAlignment.Center;
         ZIndex = 1;
         Parent = Inner;
@@ -3224,7 +3266,7 @@ function Library:CreateWindow(...)
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 6);
+        CornerRadius = Library.GroupboxCornerRadius;
         Parent = MainSectionOuter;
     });
 
@@ -3244,7 +3286,7 @@ function Library:CreateWindow(...)
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 6);
+        CornerRadius = Library.GroupboxCornerRadius;
         Parent = MainSectionInner;
     });
 
@@ -3277,7 +3319,7 @@ function Library:CreateWindow(...)
     });
 
     Library:Create('UICorner', {
-        CornerRadius = UDim.new(0, 6);
+        CornerRadius = Library.GroupboxCornerRadius;
         Parent = TabContainer;
     });
 
@@ -3307,7 +3349,7 @@ function Library:CreateWindow(...)
         });
 
         Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 4);
+            CornerRadius = Library.TabButtonCornerRadius;
             Parent = TabButton;
         });
 
@@ -3396,6 +3438,34 @@ function Library:CreateWindow(...)
             end);
         end;
 
+        local TabIndicator = Library:Create('Frame', {
+            BackgroundColor3 = Library.AccentColor;
+            BorderSizePixel = 0;
+            Size = UDim2.fromOffset(TabButton.AbsoluteSize.X, Library.TabIndicatorHeight);
+            Position = UDim2.fromOffset(TabButton.AbsolutePosition.X - TabArea.AbsolutePosition.X, -Library.TabIndicatorHeight - 1);
+            ZIndex = 10;
+            Visible = false;
+            Parent = TabArea;
+        });
+
+        Library:Create('UICorner', {
+            CornerRadius = UDim.new(0, 2);
+            Parent = TabIndicator;
+        });
+
+        Library:AddToRegistry(TabIndicator, {
+            BackgroundColor3 = 'AccentColor';
+        });
+
+        local function UpdateIndicatorPosition()
+            TabIndicator.Size = UDim2.fromOffset(TabButton.AbsoluteSize.X, Library.TabIndicatorHeight);
+            TabIndicator.Position = UDim2.fromOffset(TabButton.AbsolutePosition.X - TabArea.AbsolutePosition.X, TabArea.AbsoluteSize.Y - Library.TabIndicatorHeight);
+        end;
+
+        TabButton:GetPropertyChangedSignal('AbsolutePosition'):Connect(UpdateIndicatorPosition);
+        TabButton:GetPropertyChangedSignal('AbsoluteSize'):Connect(UpdateIndicatorPosition);
+        task.spawn(UpdateIndicatorPosition);
+
         function Tab:ShowTab()
             for _, Tab in next, Window.Tabs do
                 Tab:HideTab();
@@ -3405,6 +3475,9 @@ function Library:CreateWindow(...)
             TabButton.BackgroundColor3 = Library.MainColor;
             Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'MainColor';
             TabFrame.Visible = true;
+            if Library.TabIndicatorEnabled then
+                TabIndicator.Visible = true;
+            end;
         end;
 
         function Tab:HideTab()
@@ -3412,6 +3485,7 @@ function Library:CreateWindow(...)
             TabButton.BackgroundColor3 = Library.BackgroundColor;
             Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'BackgroundColor';
             TabFrame.Visible = false;
+            TabIndicator.Visible = false;
         end;
 
         function Tab:SetLayoutOrder(Position)
@@ -3432,7 +3506,7 @@ function Library:CreateWindow(...)
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 6);
+                CornerRadius = Library.GroupboxCornerRadius;
                 Parent = BoxOuter;
             });
 
@@ -3451,7 +3525,7 @@ function Library:CreateWindow(...)
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 6);
+                CornerRadius = Library.GroupboxCornerRadius;
                 Parent = BoxInner;
             });
 
@@ -3472,9 +3546,9 @@ function Library:CreateWindow(...)
             });
 
             local GroupboxLabel = Library:CreateLabel({
-                Size = UDim2.new(1, 0, 0, 18);
+                Size = UDim2.new(1, 0, 0, Library.GroupboxHeaderHeight - 2);
                 Position = UDim2.new(0, 4, 0, 2);
-                TextSize = 14;
+                TextSize = Library.FontSize;
                 Text = Info.Name;
                 TextXAlignment = Enum.TextXAlignment.Left;
                 ZIndex = 5;
@@ -3483,8 +3557,8 @@ function Library:CreateWindow(...)
 
             local Container = Library:Create('Frame', {
                 BackgroundTransparency = 1;
-                Position = UDim2.new(0, 4, 0, 20);
-                Size = UDim2.new(1, -4, 1, -20);
+                Position = UDim2.new(0, 4, 0, Library.GroupboxHeaderHeight);
+                Size = UDim2.new(1, -4, 1, -Library.GroupboxHeaderHeight);
                 ZIndex = 1;
                 Parent = BoxInner;
             });
@@ -3504,7 +3578,7 @@ function Library:CreateWindow(...)
                     end;
                 end;
 
-                BoxOuter.Size = UDim2.new(1, 0, 0, 20 + Size + 2 + 2);
+                BoxOuter.Size = UDim2.new(1, 0, 0, Library.GroupboxHeaderHeight + Size + 2 + 2);
             end;
 
             Groupbox.Container = Container;
@@ -3541,7 +3615,7 @@ function Library:CreateWindow(...)
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 6);
+                CornerRadius = Library.GroupboxCornerRadius;
                 Parent = BoxOuter;
             });
 
@@ -3560,7 +3634,7 @@ function Library:CreateWindow(...)
             });
 
             Library:Create('UICorner', {
-                CornerRadius = UDim.new(0, 6);
+                CornerRadius = Library.GroupboxCornerRadius;
                 Parent = BoxInner;
             });
 
@@ -3607,7 +3681,7 @@ function Library:CreateWindow(...)
                 });
 
                 Library:Create('UICorner', {
-                    CornerRadius = UDim.new(0, 4);
+                    CornerRadius = Library.TabButtonCornerRadius;
                     Parent = Button;
                 });
 
@@ -3617,7 +3691,7 @@ function Library:CreateWindow(...)
 
                 local ButtonLabel = Library:CreateLabel({
                     Size = UDim2.new(1, 0, 1, 0);
-                    TextSize = 14;
+                    TextSize = Library.FontSize;
                     Text = Name;
                     TextXAlignment = Enum.TextXAlignment.Center;
                     ZIndex = 7;

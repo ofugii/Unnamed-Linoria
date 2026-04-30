@@ -3360,24 +3360,10 @@ function Library:CreateWindow(...)
 
         local TabButtonLabel = Library:CreateLabel({
             Position = UDim2.new(0, 0, 0, 0);
-            Size = UDim2.new(1, 0, 1, -1);
+            Size = UDim2.new(1, 0, 1, 0);
             Text = Name;
             ZIndex = 1;
             Parent = TabButton;
-        });
-
-        local Blocker = Library:Create('Frame', {
-            BackgroundColor3 = Library.MainColor;
-            BorderSizePixel = 0;
-            Position = UDim2.new(0, 0, 1, 0);
-            Size = UDim2.new(1, 0, 0, 1);
-            BackgroundTransparency = 1;
-            ZIndex = 3;
-            Parent = TabButton;
-        });
-
-        Library:AddToRegistry(Blocker, {
-            BackgroundColor3 = 'MainColor';
         });
 
         local TabFrame = Library:Create('Frame', {
@@ -3441,11 +3427,10 @@ function Library:CreateWindow(...)
         local TabIndicator = Library:Create('Frame', {
             BackgroundColor3 = Library.AccentColor;
             BorderSizePixel = 0;
-            Size = UDim2.fromOffset(TabButton.AbsoluteSize.X, Library.TabIndicatorHeight);
-            Position = UDim2.fromOffset(TabButton.AbsolutePosition.X - TabArea.AbsolutePosition.X, -Library.TabIndicatorHeight - 1);
+            Size = UDim2.fromOffset(0, Library.TabIndicatorHeight);
             ZIndex = 10;
             Visible = false;
-            Parent = TabArea;
+            Parent = MainSectionInner;
         });
 
         Library:Create('UICorner', {
@@ -3458,12 +3443,16 @@ function Library:CreateWindow(...)
         });
 
         local function UpdateIndicatorPosition()
+            local btnPos = TabButton.AbsolutePosition;
+            local areaPos = MainSectionInner.AbsolutePosition;
+            local indicatorY = TabArea.AbsolutePosition.Y - areaPos.Y + TabArea.AbsoluteSize.Y - Library.TabIndicatorHeight;
             TabIndicator.Size = UDim2.fromOffset(TabButton.AbsoluteSize.X, Library.TabIndicatorHeight);
-            TabIndicator.Position = UDim2.fromOffset(TabButton.AbsolutePosition.X - TabArea.AbsolutePosition.X, TabArea.AbsoluteSize.Y - Library.TabIndicatorHeight);
+            TabIndicator.Position = UDim2.fromOffset(btnPos.X - areaPos.X, indicatorY);
         end;
 
         TabButton:GetPropertyChangedSignal('AbsolutePosition'):Connect(UpdateIndicatorPosition);
         TabButton:GetPropertyChangedSignal('AbsoluteSize'):Connect(UpdateIndicatorPosition);
+        TabArea:GetPropertyChangedSignal('AbsolutePosition'):Connect(UpdateIndicatorPosition);
         task.spawn(UpdateIndicatorPosition);
 
         function Tab:ShowTab()
@@ -3471,7 +3460,6 @@ function Library:CreateWindow(...)
                 Tab:HideTab();
             end;
 
-            Blocker.BackgroundTransparency = 0;
             TabButton.BackgroundColor3 = Library.MainColor;
             Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'MainColor';
             TabFrame.Visible = true;
@@ -3481,7 +3469,6 @@ function Library:CreateWindow(...)
         end;
 
         function Tab:HideTab()
-            Blocker.BackgroundTransparency = 1;
             TabButton.BackgroundColor3 = Library.BackgroundColor;
             Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'BackgroundColor';
             TabFrame.Visible = false;

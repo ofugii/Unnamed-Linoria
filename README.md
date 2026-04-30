@@ -2,5 +2,5 @@
 
 ## Credits
 
-- Linoria (base) — https://github.com/violin-suzutsuki/LinoriaLib  
+- Linoria (original) — https://github.com/violin-suzutsuki/LinoriaLib  
 - This version — https://github.com/ofugii/Unnamed-Linoria

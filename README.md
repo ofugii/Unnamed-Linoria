@@ -4,3 +4,6 @@
 
 - Linoria (original) — https://github.com/violin-suzutsuki/LinoriaLib  
 - This version — https://github.com/ofugii/Unnamed-Linoria
+
+# Regarding updates
+- Will be updating daly/weekly

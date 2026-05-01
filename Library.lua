@@ -85,7 +85,7 @@ end;
 local RainbowStep = 0
 local Hue = 0
 
-table.insert(Library.Signals, RenderStepped:Connect(function(Delta)
+table.insert(Library.Signals, RunService.Heartbeat:Connect(function(Delta)
     RainbowStep = RainbowStep + Delta
 
     if RainbowStep >= (1 / 60) then
@@ -211,16 +211,18 @@ function Library:MakeDraggable(Instance, Cutoff)
                 return;
             end;
 
-            while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
-                Instance.Position = UDim2.new(
-                    0,
-                    Mouse.X - ObjPos.X + (Instance.Size.X.Offset * Instance.AnchorPoint.X),
-                    0,
-                    Mouse.Y - ObjPos.Y + (Instance.Size.Y.Offset * Instance.AnchorPoint.Y)
-                );
-
-                RenderStepped:Wait();
-            end;
+            task.spawn(function()
+                while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                    if not Instance or not Instance.Parent then break end;
+                    Instance.Position = UDim2.new(
+                        0,
+                        Mouse.X - ObjPos.X + (Instance.Size.X.Offset * Instance.AnchorPoint.X),
+                        0,
+                        Mouse.Y - ObjPos.Y + (Instance.Size.Y.Offset * Instance.AnchorPoint.Y)
+                    );
+                    RunService.Heartbeat:Wait();
+                end;
+            end);
         end;
     end)
 end;
@@ -990,40 +992,44 @@ do
 
         SatVibMap.InputBegan:Connect(function(Input)
             if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
-                    local MinX = SatVibMap.AbsolutePosition.X;
-                    local MaxX = MinX + SatVibMap.AbsoluteSize.X;
-                    local MouseX = math.clamp(Mouse.X, MinX, MaxX);
+                task.spawn(function()
+                    while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                        local MinX = SatVibMap.AbsolutePosition.X;
+                        local MaxX = MinX + SatVibMap.AbsoluteSize.X;
+                        local MouseX = math.clamp(Mouse.X, MinX, MaxX);
 
-                    local MinY = SatVibMap.AbsolutePosition.Y;
-                    local MaxY = MinY + SatVibMap.AbsoluteSize.Y;
-                    local MouseY = math.clamp(Mouse.Y, MinY, MaxY);
+                        local MinY = SatVibMap.AbsolutePosition.Y;
+                        local MaxY = MinY + SatVibMap.AbsoluteSize.Y;
+                        local MouseY = math.clamp(Mouse.Y, MinY, MaxY);
 
-                    ColorPicker.Sat = (MouseX - MinX) / (MaxX - MinX);
-                    ColorPicker.Vib = 1 - ((MouseY - MinY) / (MaxY - MinY));
-                    ColorPicker:Display();
+                        ColorPicker.Sat = (MouseX - MinX) / (MaxX - MinX);
+                        ColorPicker.Vib = 1 - ((MouseY - MinY) / (MaxY - MinY));
+                        ColorPicker:Display();
 
-                    RenderStepped:Wait();
-                end;
+                        RunService.Heartbeat:Wait();
+                    end;
 
-                Library:AttemptSave();
+                    Library:AttemptSave();
+                end);
             end;
         end);
 
         HueSelectorInner.InputBegan:Connect(function(Input)
             if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
-                    local MinY = HueSelectorInner.AbsolutePosition.Y;
-                    local MaxY = MinY + HueSelectorInner.AbsoluteSize.Y;
-                    local MouseY = math.clamp(Mouse.Y, MinY, MaxY);
+                task.spawn(function()
+                    while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                        local MinY = HueSelectorInner.AbsolutePosition.Y;
+                        local MaxY = MinY + HueSelectorInner.AbsoluteSize.Y;
+                        local MouseY = math.clamp(Mouse.Y, MinY, MaxY);
 
-                    ColorPicker.Hue = ((MouseY - MinY) / (MaxY - MinY));
-                    ColorPicker:Display();
+                        ColorPicker.Hue = ((MouseY - MinY) / (MaxY - MinY));
+                        ColorPicker:Display();
 
-                    RenderStepped:Wait();
-                end;
+                        RunService.Heartbeat:Wait();
+                    end;
 
-                Library:AttemptSave();
+                    Library:AttemptSave();
+                end);
             end;
         end);
 
@@ -1044,19 +1050,20 @@ do
         if TransparencyBoxInner then
             TransparencyBoxInner.InputBegan:Connect(function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
-                        local MinX = TransparencyBoxInner.AbsolutePosition.X;
-                        local MaxX = MinX + TransparencyBoxInner.AbsoluteSize.X;
-                        local MouseX = math.clamp(Mouse.X, MinX, MaxX);
+                    task.spawn(function()
+                        while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                            local MinX = TransparencyBoxInner.AbsolutePosition.X;
+                            local MaxX = MinX + TransparencyBoxInner.AbsoluteSize.X;
+                            local MouseX = math.clamp(Mouse.X, MinX, MaxX);
 
-                        ColorPicker.Transparency = 1 - ((MouseX - MinX) / (MaxX - MinX));
+                            ColorPicker.Transparency = 1 - ((MouseX - MinX) / (MaxX - MinX));
+                            ColorPicker:Display();
 
-                        ColorPicker:Display();
+                            RunService.Heartbeat:Wait();
+                        end;
 
-                        RenderStepped:Wait();
-                    end;
-
-                    Library:AttemptSave();
+                        Library:AttemptSave();
+                    end);
                 end;
             end);
         end;
@@ -1340,27 +1347,24 @@ do
 
         PickOuter.InputBegan:Connect(function(Input)
             if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
+                if Picking then return end;
                 Picking = true;
 
                 DisplayLabel.Text = '';
 
-                local Break;
+                local Break = false;
                 local Text = '';
 
                 task.spawn(function()
-                    while (not Break) do
-                        if Text == '...' then
-                            Text = '';
-                        end;
-
+                    while not Break do
+                        if Text == '...' then Text = '' end;
                         Text = Text .. '.';
                         DisplayLabel.Text = Text;
-
-                        wait(0.4);
+                        task.wait(0.4);
                     end;
                 end);
 
-                wait(0.2);
+                task.wait(0.2);
 
                 local Event;
                 Event = InputService.InputBegan:Connect(function(Input)
@@ -1373,6 +1377,8 @@ do
                     elseif Input.UserInputType == Enum.UserInputType.MouseButton2 then
                         Key = 'MB2';
                     end;
+
+                    if not Key then return end;
 
                     Break = true;
                     Picking = false;
@@ -2273,30 +2279,58 @@ do
 
         SliderInner.InputBegan:Connect(function(Input)
             if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
-                local mPos = Mouse.X;
-                local gPos = Fill.Size.X.Offset;
-                local Diff = mPos - (Fill.AbsolutePosition.X + gPos);
+                task.spawn(function()
+                    local mPos = Mouse.X;
+                    local gPos = Fill.Size.X.Offset;
+                    local Diff = mPos - (Fill.AbsolutePosition.X + gPos);
 
-                while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
-                    local nMPos = Mouse.X;
-                    local nX = math.clamp(gPos + (nMPos - mPos) + Diff, 0, Slider.MaxSize);
+                    while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                        local nMPos = Mouse.X;
+                        local nX = math.clamp(gPos + (nMPos - mPos) + Diff, 0, Slider.MaxSize);
 
-                    local nValue = Slider:GetValueFromXOffset(nX);
-                    local OldValue = Slider.Value;
-                    Slider.Value = nValue;
+                        local nValue = Slider:GetValueFromXOffset(nX);
+                        local OldValue = Slider.Value;
+                        Slider.Value = nValue;
 
-                    Slider:Display();
+                        Slider:Display();
 
-                    if nValue ~= OldValue then
-                        Library:SafeCallback(Slider.Callback, Slider.Value);
-                        Library:SafeCallback(Slider.Changed, Slider.Value);
+                        if nValue ~= OldValue then
+                            Library:SafeCallback(Slider.Callback, Slider.Value);
+                            Library:SafeCallback(Slider.Changed, Slider.Value);
+                        end;
+
+                        RunService.Heartbeat:Wait();
                     end;
 
-                    RenderStepped:Wait();
-                end;
-
-                Library:AttemptSave();
+                    Library:AttemptSave();
+                end);
             elseif Input.UserInputType == Enum.UserInputType.Touch and not Library:MouseIsOverOpenedFrame() then
+                local touchStartX = Input.Position.X;
+                local gPos = Fill.Size.X.Offset;
+                local Diff = touchStartX - (Fill.AbsolutePosition.X + gPos);
+
+                local moved = Input.Changed:Connect(function()
+                    if Input.UserInputType == Enum.UserInputType.Touch then
+                        local nX = math.clamp(gPos + (Input.Position.X - touchStartX) + Diff, 0, Slider.MaxSize);
+                        local nValue = Slider:GetValueFromXOffset(nX);
+                        local OldValue = Slider.Value;
+                        Slider.Value = nValue;
+                        Slider:Display();
+                        if nValue ~= OldValue then
+                            Library:SafeCallback(Slider.Callback, Slider.Value);
+                            Library:SafeCallback(Slider.Changed, Slider.Value);
+                        end;
+                    end
+                end)
+
+                Input.Changed:Connect(function()
+                    if Input.UserInputState == Enum.UserInputState.End then
+                        moved:Disconnect();
+                        Library:AttemptSave();
+                    end
+                end)
+            end;
+        end);
                 local touchStartX = Input.Position.X;
                 local gPos = Fill.Size.X.Offset;
                 local Diff = touchStartX - (Fill.AbsolutePosition.X + gPos);
@@ -2743,7 +2777,7 @@ do
             end;
         end);
 
-        InputService.InputBegan:Connect(function(Input)
+        Library:GiveSignal(InputService.InputBegan:Connect(function(Input)
             if Input.UserInputType == Enum.UserInputType.MouseButton1 then
                 local AbsPos, AbsSize = ListOuter.AbsolutePosition, ListOuter.AbsoluteSize;
 
@@ -2753,7 +2787,7 @@ do
                     Dropdown:CloseDropdown();
                 end;
             end;
-        end);
+        end));
 
         Dropdown:BuildDropdownList();
         Dropdown:Display();
@@ -3208,10 +3242,11 @@ function Library:CreateWindow(...)
         Tabs = {};
     };
 
-    local Outer = Library:Create('Frame', {
+    local Outer = Library:Create('CanvasGroup', {
         AnchorPoint = Config.AnchorPoint,
         BackgroundColor3 = Color3.new(0, 0, 0);
         BorderSizePixel = 0;
+        GroupTransparency = 1;
         Position = Config.Position,
         Size = Config.Size,
         Visible = false;
@@ -3840,81 +3875,58 @@ function Library:CreateWindow(...)
             Outer.Visible = true;
 
             task.spawn(function()
-                local State = InputService.MouseIconEnabled;
+                local hasCursor = pcall(function() return Drawing.new end);
+                local Cursor, CursorOutline;
 
-                local Cursor = Drawing.new('Triangle');
-                Cursor.Thickness = 1;
-                Cursor.Filled = true;
-                Cursor.Visible = true;
+                if hasCursor then
+                    pcall(function()
+                        local State = InputService.MouseIconEnabled;
 
-                local CursorOutline = Drawing.new('Triangle');
-                CursorOutline.Thickness = 1;
-                CursorOutline.Filled = false;
-                CursorOutline.Color = Color3.new(0, 0, 0);
-                CursorOutline.Visible = true;
+                        Cursor = Drawing.new('Triangle');
+                        Cursor.Thickness = 1;
+                        Cursor.Filled = true;
+                        Cursor.Visible = true;
 
-                while Toggled and ScreenGui.Parent do
-                    InputService.MouseIconEnabled = false;
+                        CursorOutline = Drawing.new('Triangle');
+                        CursorOutline.Thickness = 1;
+                        CursorOutline.Filled = false;
+                        CursorOutline.Color = Color3.new(0, 0, 0);
+                        CursorOutline.Visible = true;
 
-                    local mPos = InputService:GetMouseLocation();
+                        while Toggled and ScreenGui.Parent do
+                            InputService.MouseIconEnabled = false;
 
-                    Cursor.Color = Library.AccentColor;
+                            local mPos = InputService:GetMouseLocation();
+                            Cursor.Color = Library.AccentColor;
 
-                    Cursor.PointA = Vector2.new(mPos.X, mPos.Y);
-                    Cursor.PointB = Vector2.new(mPos.X + 16, mPos.Y + 6);
-                    Cursor.PointC = Vector2.new(mPos.X + 6, mPos.Y + 16);
+                            Cursor.PointA = Vector2.new(mPos.X, mPos.Y);
+                            Cursor.PointB = Vector2.new(mPos.X + 16, mPos.Y + 6);
+                            Cursor.PointC = Vector2.new(mPos.X + 6, mPos.Y + 16);
 
-                    CursorOutline.PointA = Cursor.PointA;
-                    CursorOutline.PointB = Cursor.PointB;
-                    CursorOutline.PointC = Cursor.PointC;
+                            CursorOutline.PointA = Cursor.PointA;
+                            CursorOutline.PointB = Cursor.PointB;
+                            CursorOutline.PointC = Cursor.PointC;
 
-                    RenderStepped:Wait();
+                            RunService.Heartbeat:Wait();
+                        end;
+
+                        InputService.MouseIconEnabled = State;
+                        Cursor:Remove();
+                        CursorOutline:Remove();
+                    end);
                 end;
-
-                InputService.MouseIconEnabled = State;
-
-                Cursor:Remove();
-                CursorOutline:Remove();
             end);
         end;
 
-        for _, Desc in next, Outer:GetDescendants() do
-            local Properties = {};
-
-            if Desc:IsA('ImageLabel') then
-                table.insert(Properties, 'ImageTransparency');
-                table.insert(Properties, 'BackgroundTransparency');
-            elseif Desc:IsA('TextLabel') or Desc:IsA('TextBox') then
-                table.insert(Properties, 'TextTransparency');
-            elseif Desc:IsA('Frame') or Desc:IsA('ScrollingFrame') then
-                table.insert(Properties, 'BackgroundTransparency');
-            elseif Desc:IsA('UIStroke') then
-                table.insert(Properties, 'Transparency');
-            end;
-
-            local Cache = TransparencyCache[Desc];
-
-            if (not Cache) then
-                Cache = {};
-                TransparencyCache[Desc] = Cache;
-            end;
-
-            for _, Prop in next, Properties do
-                if not Cache[Prop] then
-                    Cache[Prop] = Desc[Prop];
-                end;
-
-                if Cache[Prop] == 1 then
-                    continue;
-                end;
-
-                TweenService:Create(Desc, TweenInfo.new(FadeTime, Enum.EasingStyle.Linear), { [Prop] = Toggled and Cache[Prop] or 1 }):Play();
-            end;
-        end;
+        TweenService:Create(Outer, TweenInfo.new(FadeTime, Enum.EasingStyle.Linear), {
+            GroupTransparency = Toggled and 0 or 1
+        }):Play();
 
         task.wait(FadeTime);
 
-        Outer.Visible = Toggled;
+        if not Toggled then
+            Outer.Visible = false;
+        end;
 
         Fading = false;
     end

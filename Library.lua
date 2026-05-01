@@ -3404,6 +3404,26 @@ function Library:CreateWindow(...)
             end);
         end;
 
+        local TabIndicator = Library:Create('Frame', {
+            BackgroundColor3 = Library.AccentColor;
+            BorderSizePixel = 0;
+            Size = UDim2.new(1, 0, 0, 2);
+            Position = UDim2.new(0, 0, 1, 1);
+            AnchorPoint = Vector2.new(0, 0);
+            ZIndex = 4;
+            Visible = false;
+            Parent = TabButton;
+        });
+
+        Library:Create('UICorner', {
+            CornerRadius = UDim.new(0, 2);
+            Parent = TabIndicator;
+        });
+
+        Library:AddToRegistry(TabIndicator, {
+            BackgroundColor3 = 'AccentColor';
+        });
+
         function Tab:ShowTab()
             for _, Tab in next, Window.Tabs do
                 Tab:HideTab();
@@ -3413,6 +3433,7 @@ function Library:CreateWindow(...)
             TabButton.BackgroundColor3 = Library.MainColor;
             Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'MainColor';
             TabFrame.Visible = true;
+            TabIndicator.Visible = true;
         end;
 
         function Tab:HideTab()
@@ -3420,6 +3441,7 @@ function Library:CreateWindow(...)
             TabButton.BackgroundColor3 = Library.BackgroundColor;
             Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'BackgroundColor';
             TabFrame.Visible = false;
+            TabIndicator.Visible = false;
         end;
 
         function Tab:SetLayoutOrder(Position)

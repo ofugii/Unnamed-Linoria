@@ -2259,102 +2259,33 @@ do
         end;
 
         local function SliderHandleDrag(startInputPos, startFillOffset)
-            local gPos = startFillOffset;
-            local mPos = startInputPos;
-
-            local function updateFromX(currentX)
-                local nX = math.clamp(gPos + (currentX - mPos), 0, Slider.MaxSize);
-                local nValue = Slider:GetValueFromXOffset(nX);
-                local OldValue = Slider.Value;
-                Slider.Value = nValue;
-                Slider:Display();
-                if nValue ~= OldValue then
-                    Library:SafeCallback(Slider.Callback, Slider.Value);
-                    Library:SafeCallback(Slider.Changed, Slider.Value);
-                end;
-            end
-
-            return updateFromX;
         end
 
         SliderInner.InputBegan:Connect(function(Input)
             if Input.UserInputType == Enum.UserInputType.MouseButton1 and not Library:MouseIsOverOpenedFrame() then
-                task.spawn(function()
-                    local mPos = Mouse.X;
-                    local gPos = Fill.Size.X.Offset;
-                    local Diff = mPos - (Fill.AbsolutePosition.X + gPos);
+                local mPos = Mouse.X;
+                local gPos = Fill.Size.X.Offset;
+                local Diff = mPos - (Fill.AbsolutePosition.X + gPos);
 
-                    while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
-                        local nMPos = Mouse.X;
-                        local nX = math.clamp(gPos + (nMPos - mPos) + Diff, 0, Slider.MaxSize);
+                while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+                    local nMPos = Mouse.X;
+                    local nX = math.clamp(gPos + (nMPos - mPos) + Diff, 0, Slider.MaxSize);
 
-                        local nValue = Slider:GetValueFromXOffset(nX);
-                        local OldValue = Slider.Value;
-                        Slider.Value = nValue;
+                    local nValue = Slider:GetValueFromXOffset(nX);
+                    local OldValue = Slider.Value;
+                    Slider.Value = nValue;
 
-                        Slider:Display();
+                    Slider:Display();
 
-                        if nValue ~= OldValue then
-                            Library:SafeCallback(Slider.Callback, Slider.Value);
-                            Library:SafeCallback(Slider.Changed, Slider.Value);
-                        end;
-
-                        RunService.Heartbeat:Wait();
+                    if nValue ~= OldValue then
+                        Library:SafeCallback(Slider.Callback, Slider.Value);
+                        Library:SafeCallback(Slider.Changed, Slider.Value);
                     end;
 
-                    Library:AttemptSave();
-                end);
-            elseif Input.UserInputType == Enum.UserInputType.Touch and not Library:MouseIsOverOpenedFrame() then
-                local touchStartX = Input.Position.X;
-                local gPos = Fill.Size.X.Offset;
-                local Diff = touchStartX - (Fill.AbsolutePosition.X + gPos);
+                    RenderStepped:Wait();
+                end;
 
-                local moved = Input.Changed:Connect(function()
-                    if Input.UserInputType == Enum.UserInputType.Touch then
-                        local nX = math.clamp(gPos + (Input.Position.X - touchStartX) + Diff, 0, Slider.MaxSize);
-                        local nValue = Slider:GetValueFromXOffset(nX);
-                        local OldValue = Slider.Value;
-                        Slider.Value = nValue;
-                        Slider:Display();
-                        if nValue ~= OldValue then
-                            Library:SafeCallback(Slider.Callback, Slider.Value);
-                            Library:SafeCallback(Slider.Changed, Slider.Value);
-                        end;
-                    end
-                end)
-
-                Input.Changed:Connect(function()
-                    if Input.UserInputState == Enum.UserInputState.End then
-                        moved:Disconnect();
-                        Library:AttemptSave();
-                    end
-                end)
-            end;
-        end);
-                local touchStartX = Input.Position.X;
-                local gPos = Fill.Size.X.Offset;
-                local Diff = touchStartX - (Fill.AbsolutePosition.X + gPos);
-
-                local moved = Input.Changed:Connect(function()
-                    if Input.UserInputType == Enum.UserInputType.Touch then
-                        local nX = math.clamp(gPos + (Input.Position.X - touchStartX) + Diff, 0, Slider.MaxSize);
-                        local nValue = Slider:GetValueFromXOffset(nX);
-                        local OldValue = Slider.Value;
-                        Slider.Value = nValue;
-                        Slider:Display();
-                        if nValue ~= OldValue then
-                            Library:SafeCallback(Slider.Callback, Slider.Value);
-                            Library:SafeCallback(Slider.Changed, Slider.Value);
-                        end;
-                    end
-                end)
-
-                Input.Changed:Connect(function()
-                    if Input.UserInputState == Enum.UserInputState.End then
-                        moved:Disconnect();
-                        Library:AttemptSave();
-                    end
-                end)
+                Library:AttemptSave();
             end;
         end);
 
@@ -3395,10 +3326,24 @@ function Library:CreateWindow(...)
 
         local TabButtonLabel = Library:CreateLabel({
             Position = UDim2.new(0, 0, 0, 0);
-            Size = UDim2.new(1, 0, 1, 0);
+            Size = UDim2.new(1, 0, 1, -1);
             Text = Name;
             ZIndex = 1;
             Parent = TabButton;
+        });
+
+        local Blocker = Library:Create('Frame', {
+            BackgroundColor3 = Library.MainColor;
+            BorderSizePixel = 0;
+            Position = UDim2.new(0, 0, 1, 0);
+            Size = UDim2.new(1, 0, 0, 1);
+            BackgroundTransparency = 1;
+            ZIndex = 3;
+            Parent = TabButton;
+        });
+
+        Library:AddToRegistry(Blocker, {
+            BackgroundColor3 = 'MainColor';
         });
 
         local TabFrame = Library:Create('Frame', {
@@ -3459,55 +3404,22 @@ function Library:CreateWindow(...)
             end);
         end;
 
-        local TabIndicator = Library:Create('Frame', {
-            BackgroundColor3 = Library.AccentColor;
-            BorderSizePixel = 0;
-            Size = UDim2.fromOffset(0, Library.TabIndicatorHeight);
-            ZIndex = 10;
-            Visible = false;
-            Parent = MainSectionInner;
-        });
-
-        Library:Create('UICorner', {
-            CornerRadius = UDim.new(0, 2);
-            Parent = TabIndicator;
-        });
-
-        Library:AddToRegistry(TabIndicator, {
-            BackgroundColor3 = 'AccentColor';
-        });
-
-        local function UpdateIndicatorPosition()
-            local btnPos = TabButton.AbsolutePosition;
-            local areaPos = MainSectionInner.AbsolutePosition;
-            local indicatorY = TabArea.AbsolutePosition.Y - areaPos.Y + TabArea.AbsoluteSize.Y - Library.TabIndicatorHeight;
-            TabIndicator.Size = UDim2.fromOffset(TabButton.AbsoluteSize.X, Library.TabIndicatorHeight);
-            TabIndicator.Position = UDim2.fromOffset(btnPos.X - areaPos.X, indicatorY);
-        end;
-
-        TabButton:GetPropertyChangedSignal('AbsolutePosition'):Connect(UpdateIndicatorPosition);
-        TabButton:GetPropertyChangedSignal('AbsoluteSize'):Connect(UpdateIndicatorPosition);
-        TabArea:GetPropertyChangedSignal('AbsolutePosition'):Connect(UpdateIndicatorPosition);
-        task.spawn(UpdateIndicatorPosition);
-
         function Tab:ShowTab()
             for _, Tab in next, Window.Tabs do
                 Tab:HideTab();
             end;
 
+            Blocker.BackgroundTransparency = 0;
             TabButton.BackgroundColor3 = Library.MainColor;
             Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'MainColor';
             TabFrame.Visible = true;
-            if Library.TabIndicatorEnabled then
-                TabIndicator.Visible = true;
-            end;
         end;
 
         function Tab:HideTab()
+            Blocker.BackgroundTransparency = 1;
             TabButton.BackgroundColor3 = Library.BackgroundColor;
             Library.RegistryMap[TabButton].Properties.BackgroundColor3 = 'BackgroundColor';
             TabFrame.Visible = false;
-            TabIndicator.Visible = false;
         end;
 
         function Tab:SetLayoutOrder(Position)
